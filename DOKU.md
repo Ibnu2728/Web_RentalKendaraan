@@ -23,6 +23,13 @@ rahasia diisi, mode otomatis beralih ke DOKU.
 3. Untuk go-live nanti, ulangi di https://dashboard.doku.com dan ganti
    `mode` menjadi `production` di file rahasia.
 
+## Langkah 1b — Jalankan migrasi database DOKU
+
+Di phpMyAdmin, pilih database `rental_mobil`, tab **Import**, jalankan
+`database/migrasi_doku.sql` (sekali saja). File itu menambahkan nilai
+`'doku'` ke ENUM `pembayaran.metode` — tanpa ini, pembuatan tagihan DOKU
+gagal dengan error *Data truncated for column 'metode'*.
+
 ## Langkah 2 — Isi file rahasia di server
 
 ```bash
@@ -90,6 +97,7 @@ pembayaran tidak akan terkonfirmasi otomatis.
 | Gejala | Cek |
 | --- | --- |
 | Halaman pembayaran masih mode VA | `api/doku_secret.php` belum ada / `client_id` masih berisi `xxxx` |
+| Error *Data truncated for column 'metode'* | Migrasi DOKU belum dijalankan — import `database/migrasi_doku.sql` (Langkah 1b) |
 | Webhook selalu 401 | `webhook_target` tidak sama persis dengan URL terdaftar, atau Secret Key salah mode (sandbox vs production) |
 | Sudah bayar tapi booking belum `dikonfirmasi` | Webhook tidak terjangkau DOKU (localhost tanpa ngrok?) atau URL notifikasi belum didaftarkan |
 | Error "DOKU menolak permintaan" | Lihat pesan errornya — umumnya nominal/invoice tidak valid atau kredensial salah |

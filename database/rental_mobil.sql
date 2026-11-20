@@ -104,7 +104,7 @@ CREATE TABLE IF NOT EXISTS pembayaran (
   id INT AUTO_INCREMENT PRIMARY KEY,
   booking_id INT NOT NULL,
   kode_transaksi VARCHAR(50) UNIQUE,
-  metode ENUM('transfer','midtrans','xendit','qris','va') DEFAULT 'midtrans',
+  metode ENUM('transfer','midtrans','xendit','qris','va','doku') DEFAULT 'midtrans',
   gross_amount DECIMAL(12,2),
   status ENUM('pending','settlement','expire','cancel') DEFAULT 'pending',
   va_number VARCHAR(50),
