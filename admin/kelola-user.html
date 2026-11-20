@@ -28,7 +28,51 @@
 
   <main class="main-content">
     <header class="topbar"><h1>Kelola User</h1></header>
-    <p style="color:#6b7280; margin-bottom:20px;">Semua akun terdaftar. Akun nonaktif tidak bisa login. Akun Anda sendiri tidak bisa dinonaktifkan dari sini.</p>
+    <p style="color:#6b7280; margin-bottom:20px;">Semua akun terdaftar. Akun nonaktif tidak bisa login. Akun Anda sendiri tidak bisa dinonaktifkan dari sini. Akun baru dibuatkan dari formulir di bawah — password Anda yang menentukan, lalu serahkan ke pemilik akun.</p>
+
+    <form class="form-box" id="formTambah" style="margin-bottom:24px;">
+      <h2>➕ Tambah Akun</h2>
+      <div id="alertBox" class="alert"></div>
+      <div class="form-group">
+        <label>Role</label>
+        <select name="role" id="fRole">
+          <option value="user">👤 Penyewa (User)</option>
+          <option value="mitra">🏢 Mitra (Pemilik Mobil)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Nama Lengkap</label>
+        <input type="text" name="nama" required placeholder="Nama pemilik akun">
+      </div>
+      <div class="form-group">
+        <label>Email (untuk login)</label>
+        <input type="email" name="email" required placeholder="nama@mail.com">
+      </div>
+      <div class="form-group">
+        <label>Password (tentukan, lalu serahkan ke pemilik akun)</label>
+        <input type="text" name="password" required minlength="6" placeholder="Minimal 6 karakter">
+      </div>
+      <div class="form-group">
+        <label>No. HP</label>
+        <input type="text" name="no_hp" placeholder="08xxxxxxxxxx">
+      </div>
+      <div class="form-group">
+        <label>Alamat</label>
+        <input type="text" name="alamat" placeholder="Alamat pemilik akun">
+      </div>
+      <div id="fieldMitra" style="display:none;">
+        <div class="form-group">
+          <label>Nama Usaha</label>
+          <input type="text" name="nama_usaha" id="fUsaha" placeholder="cth. PT Sewa Jaya">
+        </div>
+        <div class="form-group">
+          <label>No. SIPA</label>
+          <input type="text" name="no_sipa" placeholder="Nomor SIPA (jika ada)">
+        </div>
+        <p style="font-size:13px; color:#6b7280;">Akun mitra yang dibuat admin langsung terverifikasi (approved).</p>
+      </div>
+      <button type="submit" class="btn-primary">💾 Buat Akun</button>
+    </form>
 
     <section class="table-section">
       <table>
@@ -43,6 +87,29 @@
 
 <script src="../assets/js/admin.js"></script>
 <script>
+const fRole = document.getElementById('fRole');
+fRole.addEventListener('change', () => {
+  const mitra = fRole.value === 'mitra';
+  document.getElementById('fieldMitra').style.display = mitra ? 'block' : 'none';
+  document.getElementById('fUsaha').required = mitra;
+});
+
+document.getElementById('formTambah').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const box = document.getElementById('alertBox');
+  try {
+    const data = await apiPost('tambah_akun', Object.fromEntries(new FormData(e.target).entries()));
+    box.className = 'alert show alert-success';
+    box.textContent = '✅ ' + (data.message || 'Akun dibuat.');
+    e.target.reset();
+    document.getElementById('fieldMitra').style.display = 'none';
+    muatUser();
+  } catch (err) {
+    box.className = 'alert show alert-error';
+    box.textContent = '❌ ' + err.message;
+  }
+});
+
 async function muatUser() {
   const tbody = document.getElementById('tabelUser');
   try {

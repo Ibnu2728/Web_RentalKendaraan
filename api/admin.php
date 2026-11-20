@@ -62,6 +62,59 @@ if ($action === 'users' && $method === 'GET') {
         "SELECT id, nama, email, no_hp, role, status, created_at FROM users ORDER BY id DESC")]);
 }
 
+if ($action === 'tambah_akun' && $method === 'POST') {
+    // Akun dibuatkan oleh admin, password ditentukan admin dan diserahkan
+    // ke pemilik akun — tidak ada registrasi mandiri dari publik.
+    $nama = trim($_POST['nama'] ?? '');
+    $email = strtolower(trim($_POST['email'] ?? ''));
+    $password = (string)($_POST['password'] ?? '');
+    $noHp = trim($_POST['no_hp'] ?? '');
+    $alamat = trim($_POST['alamat'] ?? '');
+    $role = $_POST['role'] ?? 'user';
+    if (!in_array($role, ['user', 'mitra'], true)) {
+        json_out(['success' => false, 'message' => 'Role tidak valid.']);
+    }
+    if ($nama === '' || $email === '' || strlen($password) < 6) {
+        json_out(['success' => false, 'message' => 'Nama, email, dan password (min. 6 karakter) wajib diisi.'], 400);
+    }
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        json_out(['success' => false, 'message' => 'Format email tidak valid.'], 400);
+    }
+    $namaUsaha = trim($_POST['nama_usaha'] ?? '');
+    $noSipa = trim($_POST['no_sipa'] ?? '');
+    if ($role === 'mitra' && $namaUsaha === '') {
+        json_out(['success' => false, 'message' => 'Nama usaha wajib diisi untuk akun mitra.'], 400);
+    }
+    $cek = $conn->prepare("SELECT id FROM users WHERE email = ? LIMIT 1");
+    $cek->bind_param('s', $email);
+    $cek->execute();
+    if ($cek->get_result()->fetch_assoc()) {
+        json_out(['success' => false, 'message' => 'Email sudah terdaftar.'], 409);
+    }
+
+    $hash = password_hash($password, PASSWORD_DEFAULT);
+    $conn->begin_transaction();
+    $stmt = $conn->prepare("INSERT INTO users (nama, email, password, no_hp, alamat, role, status) VALUES (?, ?, ?, ?, ?, ?, 'aktif')");
+    $stmt->bind_param('ssssss', $nama, $email, $hash, $noHp, $alamat, $role);
+    if (!$stmt->execute()) {
+        $conn->rollback();
+        json_out(['success' => false, 'message' => 'Gagal membuat akun: ' . $stmt->error], 500);
+    }
+    $userId = (int)$stmt->insert_id;
+    if ($role === 'mitra') {
+        // Dibuatkan admin = langsung terverifikasi, tidak perlu antre persetujuan.
+        $m = $conn->prepare("INSERT INTO mitra (user_id, nama_usaha, no_sipa, status_verifikasi) VALUES (?, ?, ?, 'approved')");
+        $m->bind_param('iss', $userId, $namaUsaha, $noSipa);
+        if (!$m->execute()) {
+            $conn->rollback();
+            json_out(['success' => false, 'message' => 'Gagal membuat profil mitra: ' . $m->error], 500);
+        }
+    }
+    $conn->commit();
+    catat_log($admin['user_id'], 'admin_tambah_akun', $role . ' ' . $email);
+    json_out(['success' => true, 'message' => 'Akun ' . $email . ' dibuat. Serahkan password yang Anda tentukan ke pemilik akun.']);
+}
+
 if ($action === 'user_status' && $method === 'POST') {
     $id = (int)($_POST['id'] ?? 0);
     $status = $_POST['status'] ?? '';

@@ -8,6 +8,15 @@
 // keduanya, jadi tidak ada akun mitra yatim tanpa profil penyedianya.
 require_once __DIR__ . '/config.php';
 
+// ============================================================
+//  REGISTRASI PUBLIK DITUTUP — akun dibuatkan oleh admin lewat
+//  admin/kelola-user.html (admin yang menentukan password-nya,
+//  lihat api/admin.php action=tambah_akun).
+//  Untuk membuka registrasi mandiri lagi, hapus blok json_out
+//  di bawah ini; kode registrasi aslinya tetap utuh di file ini.
+// ============================================================
+json_out(['success' => false, 'message' => 'Pendaftaran mandiri ditutup. Akun dibuat oleh admin — silakan hubungi admin untuk dibuatkan akun.'], 403);
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     json_out(['success' => false, 'message' => 'Metode tidak diizinkan.'], 405);
 }

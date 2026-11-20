@@ -11,7 +11,7 @@ sekali** — semua pekerjaan ada di `uji-coba` sampai dinyatakan siap merge.
 
 | Area | Yang ditambahkan |
 | --- | --- |
-| Registrasi | `register.html` + `api/auth.php` — daftar sebagai penyewa (langsung aktif) atau mitra (menunggu verifikasi admin) |
+| Akun | Dibuatkan admin dari `admin/kelola-user.html` (admin menentukan password). Registrasi mandiri ditutup — `register.html` hanya menampilkan pemberitahuan |
 | Penyewa | `user/dashboard.html`, `user/riwayat.html` + `api/user.php` — ringkasan, riwayat, batalkan booking |
 | Mitra | `mitra/booking-masuk.html`, `mitra/pendapatan.html`, `mitra/profil.html` + `api/mitra.php` — serah terima → aktif → selesai, pendapatan per hari, profil & rekening |
 | Admin | `api/admin.php` + 8 halaman: kelola user, kelola mitra, verifikasi mitra, kelola mobil, kelola booking, verifikasi pembayaran, laporan keuangan, pengaturan |
@@ -104,17 +104,20 @@ tabel baru `pengeluaran` dibuat.
 
 Supaya gampang mengecek semuanya jalan:
 
+**Admin (langkah pertama)**
+- [ ] `admin/kelola-user.html`: buat satu akun penyewa dan satu akun mitra lewat form Tambah Akun (tentukan password-nya).
+
 **Penyewa**
-- [ ] Daftar akun baru di `register.html` → login → katalog → checkout → bayar (simulasi VA) → struk tampil.
+- [ ] Login dengan akun yang dibuat admin → katalog → checkout → bayar (simulasi VA) → struk tampil.
 - [ ] Buka `user/dashboard.html` & `user/riwayat.html` → booking muncul; batalkan satu booking pending.
 
 **Mitra**
-- [ ] Daftar sebagai mitra → login **ditolak** (masih pending) → setelah disetujui admin, login berhasil.
+- [ ] Login dengan akun mitra buatan admin (langsung bisa masuk, sudah approved).
 - [ ] `mitra/booking-masuk.html`: ubah booking lunas menjadi Aktif (serah terima), lalu Selesai.
 - [ ] `mitra/pendapatan.html` & `mitra/profil.html` tampil dan bisa disimpan.
 
 **Admin**
-- [ ] `admin/verifikasi-mitra.html`: setujui mitra yang baru daftar.
+- [ ] `admin/verifikasi-mitra.html`: halaman ini kini untuk mitra lama yang berstatus pending (akun buatan admin sudah approved).
 - [ ] `admin/dashboard.html`: angka statistik sesuai isi database.
 - [ ] `admin/laporan-keuangan.html`: catat satu pengeluaran → saldo berkurang.
 - [ ] `admin/pengaturan.html`: ganti password admin → logout → login dengan password baru.
