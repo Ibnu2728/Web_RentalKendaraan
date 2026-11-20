@@ -51,7 +51,10 @@ function doku_signature(string $clientId, string $requestId, string $timestamp, 
               . "Request-Timestamp:$timestamp\n"
               . "Request-Target:$target\n"
               . "Digest:$digest";
-    return 'HMAC-SHA256=' . base64_encode(hash_hmac('sha256', $komponen, $secret, true));
+    // Format header DOKU: "HMACSHA256=" (TANPA tanda hubung — sesuai
+    // dokumentasi resmi DOKU; menulis "HMAC-SHA256=" ditolak sebagai
+    // "Invalid Header Signature").
+    return 'HMACSHA256=' . base64_encode(hash_hmac('sha256', $komponen, $secret, true));
 }
 
 /** Header lengkap untuk memanggil API DOKU (termasuk signature). */

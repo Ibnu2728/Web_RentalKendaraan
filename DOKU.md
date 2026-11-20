@@ -98,6 +98,7 @@ pembayaran tidak akan terkonfirmasi otomatis.
 | --- | --- |
 | Halaman pembayaran masih mode VA | `api/doku_secret.php` belum ada / `client_id` masih berisi `xxxx` |
 | Error *Data truncated for column 'metode'* | Migrasi DOKU belum dijalankan — import `database/migrasi_doku.sql` (Langkah 1b) |
+| Error *Invalid Header Signature* dari DOKU | Pastikan kode terbaru (`HMACSHA256=` tanpa tanda hubung). Bila masih gagal: Client ID / Secret tertukar mode (kredensial sandbox dipakai di production atau sebaliknya), atau Secret terpotong/kena spasi saat menyalin |
 | Webhook selalu 401 | `webhook_target` tidak sama persis dengan URL terdaftar, atau Secret Key salah mode (sandbox vs production) |
 | Sudah bayar tapi booking belum `dikonfirmasi` | Webhook tidak terjangkau DOKU (localhost tanpa ngrok?) atau URL notifikasi belum didaftarkan |
 | Error "DOKU menolak permintaan" | Lihat pesan errornya — umumnya nominal/invoice tidak valid atau kredensial salah |
