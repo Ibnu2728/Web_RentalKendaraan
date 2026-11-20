@@ -76,9 +76,21 @@ function doku_headers(string $target, string $rawBody): array {
  * $payload sesuai format Jokul Checkout (order, payment, customer).
  * Return: ['url' => string] atau ['error' => string].
  */
+/**
+ * DOKU hanya menerima karakter tertentu di kolom teks (nama, alamat,
+ * nama item): a-z A-Z 0-9 . - / + , = _ : ' @ % ( ) dan spasi.
+ * Karakter lain (mis. #, &, *) membuat permintaan ditolak dengan
+ * "Invalid character". Fungsi ini membuang karakter terlarang.
+ */
+function doku_teks_aman(?string $teks): string {
+    $teks = (string)$teks;
+    $teks = preg_replace("/[^a-zA-Z0-9 .\\-\\/+,=_:'@%()]/u", '', $teks) ?? '';
+    return trim(preg_replace('/\s+/', ' ', $teks) ?? '');
+}
+
 function doku_buat_link_bayar(array $payload): array {
     $target = '/checkout/v1/payment';
-    $body = json_encode($payload);
+    $body = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     $ch = curl_init(doku_base_api() . $target);
     curl_setopt_array($ch, [
         CURLOPT_POST => true,

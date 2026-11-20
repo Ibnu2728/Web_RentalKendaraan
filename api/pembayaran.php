@@ -69,17 +69,17 @@ if ($action === 'create') {
                 'currency'       => 'IDR',
                 'callback_url'   => doku_base_url() . '/user/struk.html?booking_id=' . $bookingId,
                 'line_items'     => [[
-                    'name'     => 'Sewa Mobil - Booking #' . $bookingId,
+                    'name'     => doku_teks_aman('Sewa Mobil - Booking ' . $bookingId),
                     'price'    => (int)round($total),
                     'quantity' => 1,
                 ]],
             ],
             'payment' => ['payment_due_date' => 120],
             'customer' => [
-                'name'    => $usr['nama'] ?? 'Pelanggan',
+                'name'    => doku_teks_aman($usr['nama'] ?? 'Pelanggan'),
                 'email'   => $usr['email'] ?? '',
                 'phone'   => $usr['no_hp'] ?? '',
-                'address' => $usr['alamat'] ?? '',
+                'address' => doku_teks_aman($usr['alamat'] ?? ''),
                 'country' => 'ID',
             ],
         ];
