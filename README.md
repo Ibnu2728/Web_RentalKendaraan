@@ -57,4 +57,9 @@ Di cabang ini semua berkas yang sebelumnya kosong sudah diisi:
 
 ## Catatan DOKU
 
-Pembayaran saat ini masih simulasi. Integrasi DOKU Checkout membutuhkan Client ID dan Secret Key dari DOKU Sandbox. Jangan menaruh Secret Key di HTML/JavaScript; hanya konfigurasi server PHP yang boleh mengaksesnya. Setelah akun Sandbox tersedia, lanjutkan endpoint create checkout, redirect ke payment URL, webhook notification yang memverifikasi signature, dan update status transaksi secara idempotent.
+Pembayaran bawaan masih simulasi. **Di branch `fitur/doku`** kerangka integrasi
+DOKU Checkout sudah dibuat: `api/doku_config.php`, `api/doku_webhook.php`
+(verifikasi signature + idempotent), dan `api/pembayaran.php` yang bercabang
+ke DOKU bila `api/doku_secret.php` sudah diisi. Panduan lengkapnya ada di
+[`DOKU.md`](DOKU.md). Secret Key tidak boleh masuk HTML/JavaScript/GitHub —
+hanya file rahasia di server.

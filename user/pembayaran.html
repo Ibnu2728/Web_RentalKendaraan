@@ -14,7 +14,7 @@
 <script>checkAuth('user');</script>
 
 <div class="pay-box">
-  <h2>Simulasi Pembayaran</h2>
+  <h2 id="judulBayar">Simulasi Pembayaran</h2>
   <p style="color:#666; margin-bottom:20px;">Selesaikan pembayaran untuk melanjutkan</p>
 
   <div id="loading">Membuat tagihan...</div>
@@ -23,7 +23,7 @@
   <div id="payArea" style="display:none;">
     <p>Total Tagihan:</p>
     <h3 id="total" style="color:#16a34a; font-size:28px; margin:8px 0;">Rp 0</h3>
-    <p>Virtual Account (BCA):</p>
+    <p id="labelVa">Virtual Account (BCA):</p>
     <div class="va-box" id="vaNumber">-</div>
     <button id="btnBayar" class="btn-primary" onclick="simulasiBayar()" style="width:100%; padding:14px; margin-top:16px;">✅ Bayar Sekarang (Simulasi)</button>
   </div>
@@ -52,6 +52,18 @@ async function initPembayaran() {
   try {
     const data = await post('create');
     if (!data.success) return tampilError(data.message || 'Gagal membuat tagihan.');
+    if (data.mode === 'doku' && data.payment_url) {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('payArea').style.display = 'block';
+      document.getElementById('judulBayar').textContent = 'Pembayaran via DOKU';
+      document.getElementById('labelVa').textContent = 'Metode:';
+      document.getElementById('vaNumber').textContent = 'DOKU Checkout';
+      document.getElementById('total').textContent = 'Rp ' + fmtRp(data.total);
+      const btn = document.getElementById('btnBayar');
+      btn.textContent = '💳 Bayar via DOKU';
+      btn.onclick = () => { window.location.href = data.payment_url; };
+      return;
+    }
     document.getElementById('loading').style.display = 'none';
     document.getElementById('payArea').style.display = 'block';
     document.getElementById('vaNumber').textContent = data.va;

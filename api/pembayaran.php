@@ -1,11 +1,13 @@
 <?php
-// Pembayaran SIMULASI (tanpa payment gateway sungguhan).
-//   POST ?action=create    booking_id  -> buat / ambil tagihan (VA)
-//   POST ?action=callback  booking_id  -> simulasi "bayar sukses"
-//
-// CATATAN: saat nanti memakai gateway sungguhan (Midtrans/Xendit), 'callback' HARUS
-// dipanggil oleh server gateway dan diverifikasi dengan signature key — bukan oleh browser user.
+// Pembayaran: SIMULASI VA (bawaan) atau DOKU Checkout bila sudah dikonfigurasi.
+//   POST ?action=create    booking_id  -> buat tagihan; mode DOKU mengembalikan
+//                                         payment_url untuk redirect ke halaman DOKU,
+//                                         mode simulasi mengembalikan nomor VA.
+//   POST ?action=callback  booking_id  -> simulasi "bayar sukses" (mode simulasi saja).
+// Konfirmasi pembayaran DOKU yang sesungguhnya tiba lewat api/doku_webhook.php
+// (dipanggil server DOKU, signature diverifikasi) — bukan dari browser user.
 require 'auth_check.php';
+require_once __DIR__ . '/doku_config.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     json_out(['success' => false, 'message' => 'Metode tidak diizinkan.'], 405);
@@ -33,6 +35,66 @@ if ($action === 'create') {
     if ($booking['status'] !== 'pending') {
         json_out(['success' => false, 'message' => 'Booking ini sudah dibayar atau tidak aktif.']);
     }
+
+    // ===== MODE DOKU (bila api/doku_secret.php sudah diisi) =====
+    if (doku_aktif()) {
+        // Tagihan pending lama digantikan tagihan DOKU baru (invoice DOKU
+        // harus unik, jadi link lama tidak dipakai ulang).
+        if ($bayar && $bayar['status'] === 'pending') {
+            $batalkan = $conn->prepare("UPDATE pembayaran SET status = 'cancel' WHERE id = ?");
+            $batalkan->bind_param('i', $bayar['id']);
+            $batalkan->execute();
+        }
+
+        $uq = $conn->prepare("SELECT nama, email, no_hp, alamat FROM users WHERE id = ?");
+        $uq->bind_param('i', $u['user_id']);
+        $uq->execute();
+        $usr = $uq->get_result()->fetch_assoc();
+
+        $kode  = 'TRX-' . strtoupper(bin2hex(random_bytes(5)));
+        $total = (float)$booking['total_bayar'];
+
+        $stmt = $conn->prepare("INSERT INTO pembayaran (booking_id, kode_transaksi, metode, gross_amount, status)
+                                VALUES (?, ?, 'doku', ?, 'pending')");
+        $stmt->bind_param('isd', $bookingId, $kode, $total);
+        if (!$stmt->execute()) {
+            json_out(['success' => false, 'message' => 'Gagal membuat tagihan: ' . $stmt->error]);
+        }
+        $pembayaranId = (int)$stmt->insert_id;
+
+        $payload = [
+            'order' => [
+                'amount'         => (int)round($total),
+                'invoice_number' => $kode,
+                'currency'       => 'IDR',
+                'callback_url'   => doku_base_url() . '/user/struk.html?booking_id=' . $bookingId,
+                'line_items'     => [[
+                    'name'     => 'Sewa Mobil - Booking #' . $bookingId,
+                    'price'    => (int)round($total),
+                    'quantity' => 1,
+                ]],
+            ],
+            'payment' => ['payment_due_date' => 120],
+            'customer' => [
+                'name'    => $usr['nama'] ?? 'Pelanggan',
+                'email'   => $usr['email'] ?? '',
+                'phone'   => $usr['no_hp'] ?? '',
+                'address' => $usr['alamat'] ?? '',
+                'country' => 'ID',
+            ],
+        ];
+
+        $hasil = doku_buat_link_bayar($payload);
+        if (isset($hasil['error'])) {
+            $gagal = $conn->prepare("UPDATE pembayaran SET status = 'cancel' WHERE id = ?");
+            $gagal->bind_param('i', $pembayaranId);
+            $gagal->execute();
+            json_out(['success' => false, 'message' => $hasil['error']]);
+        }
+        json_out(['success' => true, 'mode' => 'doku', 'payment_url' => $hasil['url'], 'total' => $total]);
+    }
+
+    // ===== MODE SIMULASI VA =====
     if ($bayar && $bayar['status'] === 'pending') {   // idempotent: refresh halaman tidak membuat tagihan baru
         json_out(['success' => true, 'va' => $bayar['va_number'], 'total' => (float)$bayar['gross_amount']]);
     }
