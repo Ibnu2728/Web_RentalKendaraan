@@ -1,0 +1,100 @@
+<!-- /admin/dashboard.html -->
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin — Dashboard</title>
+  <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+<body>
+<script src="../assets/js/auth.js"></script>
+<script>checkAuth('admin');</script>
+<div class="admin-layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="logo">⚙️ Admin Panel</div>
+    <nav>
+      <a href="dashboard.html" class="active">📊 Dashboard</a>
+      <a href="kelola-user.html">👥 Kelola User</a>
+      <a href="kelola-mitra.html">🏢 Kelola Mitra</a>
+      <a href="verifikasi-mitra.html">✅ Verifikasi Mitra</a>
+      <a href="kelola-mobil.html">🚗 Kelola Mobil</a>
+      <a href="kelola-booking.html">📋 Kelola Booking</a>
+      <a href="verifikasi-pembayaran.html">💳 Verifikasi Pembayaran</a>
+      <a href="laporan-keuangan.html">💰 Laporan Keuangan</a>
+      <a href="pengaturan.html">⚙️ Pengaturan</a>
+      <a href="#" onclick="logout(); return false;">🚪 Keluar</a>
+    </nav>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main-content">
+    <header class="topbar">
+      <h1>Dashboard</h1>
+      <div class="user-info">👤 Admin Utama</div>
+    </header>
+
+    <!-- STAT CARDS -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <span class="stat-icon">📋</span>
+        <div><p>Total Booking</p><h3>128</h3></div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-icon">🚗</span>
+        <div><p>Mobil Terdaftar</p><h3>42</h3></div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-icon">🏢</span>
+        <div><p>Mitra Aktif</p><h3>18</h3></div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-icon">💰</span>
+        <div><p>Pendapatan Bulan Ini</p><h3>Rp 24.500.000</h3></div>
+      </div>
+    </div>
+
+    <!-- TABEL BOOKING TERBARU -->
+    <section class="table-section">
+      <h2>Booking Terbaru</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Kode</th><th>User</th><th>Mobil</th>
+            <th>Jenis Sewa</th><th>Total</th><th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>BK-2025-001</td><td>Andi</td><td>Avanza</td>
+            <td>Lepas Kunci</td><td>Rp 1.700.000</td>
+            <td><span class="badge badge-warning">Pending</span></td>
+          </tr>
+          <tr>
+            <td>BK-2025-002</td><td>Budi</td><td>Innova</td>
+            <td>Dengan Supir</td><td>Rp 2.400.000</td>
+            <td><span class="badge badge-success">Selesai</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- LAPORAN KEUANGAN (filter rentang waktu) -->
+    <section class="laporan-section">
+      <h2>Laporan Keuangan</h2>
+      <div class="filter-bar">
+        <label>Dari: <input type="date" id="tglDari"></label>
+        <label>Sampai: <input type="date" id="tglSampai"></label>
+        <button class="btn-primary" onclick="loadLaporan()">Filter</button>
+        <button class="btn-outline" onclick="cetakLaporan()">🖨️ Cetak</button>
+      </div>
+      <p id="ringkasan" style="margin:12px 0; font-weight:600;"></p>
+      <canvas id="chartKeuangan" height="80"></canvas>
+    </section>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="../assets/js/laporan.js"></script>
+</body>
+</html>

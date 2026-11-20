@@ -1,0 +1,54 @@
+<!-- /mitra/dashboard.html -->
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Mitra — Dashboard</title>
+  <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+<body>
+<script src="../assets/js/auth.js"></script>
+<script>checkAuth('mitra');</script>
+<div class="admin-layout">
+  <aside class="sidebar">
+    <div class="logo">🏢 Mitra Panel</div>
+    <nav>
+      <a href="dashboard.html" class="active">📊 Dashboard</a>
+      <a href="mobil-saya.html">🚗 Mobil Saya</a>
+      <a href="tambah-mobil.html">➕ Tambah Mobil</a>
+      <a href="booking-masuk.html">📋 Booking Masuk</a>
+      <a href="pendapatan.html">💰 Pendapatan</a>
+      <a href="profil.html">👤 Profil</a>
+      <a href="#" onclick="logout(); return false;">🚪 Keluar</a>
+    </nav>
+  </aside>
+
+  <main class="main-content">
+    <header class="topbar">
+      <h1>Dashboard Mitra</h1>
+      <div class="user-info">🏢 PT Sewa Jaya</div>
+    </header>
+
+    <div class="stats-grid">
+      <div class="stat-card"><span class="stat-icon">🚗</span><div><p>Mobil Terdaftar</p><h3>5</h3></div></div>
+      <div class="stat-card"><span class="stat-icon">📋</span><div><p>Booking Aktif</p><h3>3</h3></div></div>
+      <div class="stat-card"><span class="stat-icon">💰</span><div><p>Pendapatan Bulan Ini</p><h3>Rp 8.200.000</h3></div></div>
+    </div>
+
+    <section class="table-section">
+      <h2>Booking Masuk</h2>
+      <table>
+        <thead><tr><th>Kode</th><th>Mobil</th><th>Penyewa</th><th>Jenis</th><th>Total</th><th>Aksi</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>BK-2025-003</td><td>Avanza</td><td>Citra</td>
+            <td>Dengan Supir</td><td>Rp 2.400.000</td>
+            <td><button class="btn-primary">Konfirmasi</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+</div>
+</body>
+</html>

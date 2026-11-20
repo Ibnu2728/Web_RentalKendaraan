@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Mitra — Edit Mobil</title>
+  <link rel="stylesheet" href="../assets/css/admin.css">
+  <style>
+    /* Copy style dari tambah-mobil.html */
+    .form-card { background: #fff; padding: 32px; border-radius: 12px; max-width: 900px; }
+    .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+    .form-group { display: flex; flex-direction: column; }
+    .form-group.full { grid-column: 1 / -1; }
+    .form-group label { font-weight: 600; font-size: 14px; margin-bottom: 6px; color: #374151; }
+    .form-group input, .form-group select, .form-group textarea {
+      padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px;
+    }
+    .form-actions { grid-column: 1/-1; display: flex; gap: 12px; justify-content: flex-end; margin-top: 16px; }
+  </style>
+</head>
+<body>
+<script src="../assets/js/auth.js"></script>
+<script>checkAuth('mitra');</script>
+
+<div class="admin-layout">
+  <aside class="sidebar">
+    <div class="logo">🏢 Mitra Panel</div>
+    <nav>
+      <a href="dashboard.html">📊 Dashboard</a>
+      <a href="mobil-saya.html" class="active">🚗 Mobil Saya</a>
+      <a href="tambah-mobil.html">➕ Tambah Mobil</a>
+      <a href="#" onclick="logout(); return false;">🚪 Keluar</a>
+    </nav>
+  </aside>
+
+  <main class="main-content">
+    <header class="topbar">
+      <h1>✏️ Edit Data Mobil</h1>
+      <a href="mobil-saya.html" class="btn-secondary">⬅️ Kembali</a>
+    </header>
+
+    <div class="form-card">
+      <form id="formEdit" class="form-grid">
+        <input type="hidden" name="id" id="mobilId">
+        
+        <div class="form-group">
+          <label>Nama Mobil</label>
+          <input type="text" name="nama_mobil" id="nama_mobil" required>
+        </div>
+        <div class="form-group">
+          <label>Plat Nomor</label>
+          <input type="text" name="plat_nomor" id="plat_nomor" required>
+        </div>
+        <div class="form-group">
+          <label>Merk</label>
+          <input type="text" name="merk" id="merk">
+        </div>
+        <div class="form-group">
+          <label>Tahun</label>
+          <input type="number" name="tahun" id="tahun" min="2000" max="2030">
+        </div>
+        <div class="form-group">
+          <label>Transmisi</label>
+          <select name="transmisi" id="transmisi">
+            <option value="manual">Manual</option>
+            <option value="matic">Matic</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Kapasitas Penumpang</label>
+          <input type="number" name="kapasitas" id="kapasitas" min="1" max="20">
+        </div>
+        <div class="form-group">
+          <label>Harga Lepas Kunci / Hari</label>
+          <input type="number" name="harga_lepas_kunci" id="harga_lepas_kunci" required>
+        </div>
+        <div class="form-group">
+          <label>Harga Dengan Supir / Hari</label>
+          <input type="number" name="harga_dengan_supir" id="harga_dengan_supir">
+        </div>
+        <div class="form-group">
+          <label>Deposit (Lepas Kunci)</label>
+          <input type="number" name="deposit" id="deposit" min="0">
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select name="status" id="status">
+            <option value="tersedia">Tersedia</option>
+            <option value="disewa">Disewa</option>
+            <option value="nonaktif">Nonaktif</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label>Deskripsi</label>
+          <textarea name="deskripsi" id="deskripsi" rows="3"></textarea>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-primary">💾 Simpan Perubahan</button>
+        </div>
+      </form>
+    </div>
+  </main>
+</div>
+
+<script>
+const id = new URLSearchParams(window.location.search).get('id');
+
+// 1. Ambil data mobil
+async function loadData() {
+  try {
+    const res = await fetch(`../api/mobil.php?id=${encodeURIComponent(id)}`);
+    const result = await res.json();
+    if (!result.success) throw new Error(result.message);
+
+    const m = result.data;
+    const set = (k, v) => { document.getElementById(k).value = v ?? ''; };
+    set('mobilId', m.id);
+    ['nama_mobil','merk','plat_nomor','tahun','transmisi','kapasitas',
+     'harga_lepas_kunci','harga_dengan_supir','deposit','status','deskripsi']
+      .forEach(k => set(k, m[k]));
+  } catch (err) {
+    alert('❌ ' + err.message);
+    window.location.href = 'mobil-saya.html';
+  }
+}
+
+// 2. Submit edit
+document.getElementById('formEdit').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(e.target).entries());
+
+  const res = await fetch('../api/mobil.php', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams(data)
+  });
+  const result = await res.json();
+
+  if (result.success) {
+    alert('✅ ' + result.message);
+    window.location.href = 'mobil-saya.html';
+  } else {
+    alert('❌ ' + result.message);
+  }
+});
+
+loadData();
+</script>
+</body>
+</html>

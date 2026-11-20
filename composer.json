@@ -1,0 +1,12 @@
+{
+    "name": "rental/kendaraan",
+    "description": "Website rental kendaraan",
+    "authors": [
+        {
+            "name": "ibnu",
+            "email": "ibnusyuhadasuffera@gmail.com"
+        }
+    ],
+    "require": {},
+    "minimum-stability": "dev"
+}

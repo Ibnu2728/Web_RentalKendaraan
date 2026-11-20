@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Pembayaran</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <style>
+    .pay-box { max-width: 500px; margin: 60px auto; background: #fff; padding: 32px; border-radius: 16px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,.08); }
+    .va-box { background: #f3f4f6; padding: 16px; border-radius: 8px; font-size: 24px; font-weight: 700; letter-spacing: 2px; margin: 20px 0; color: #1e40af; }
+  </style>
+</head>
+<body>
+<script src="../assets/js/auth.js"></script>
+<script>checkAuth('user');</script>
+
+<div class="pay-box">
+  <h2>Simulasi Pembayaran</h2>
+  <p style="color:#666; margin-bottom:20px;">Selesaikan pembayaran untuk melanjutkan</p>
+
+  <div id="loading">Membuat tagihan...</div>
+  <div id="error" style="display:none; color:#b91c1c; margin:16px 0;"></div>
+
+  <div id="payArea" style="display:none;">
+    <p>Total Tagihan:</p>
+    <h3 id="total" style="color:#16a34a; font-size:28px; margin:8px 0;">Rp 0</h3>
+    <p>Virtual Account (BCA):</p>
+    <div class="va-box" id="vaNumber">-</div>
+    <button id="btnBayar" class="btn-primary" onclick="simulasiBayar()" style="width:100%; padding:14px; margin-top:16px;">✅ Bayar Sekarang (Simulasi)</button>
+  </div>
+</div>
+
+<script>
+const bookingId = new URLSearchParams(window.location.search).get('booking_id');
+
+function tampilError(msg) {
+  document.getElementById('loading').style.display = 'none';
+  const el = document.getElementById('error');
+  el.textContent = '❌ ' + msg;
+  el.style.display = 'block';
+}
+
+async function post(action) {
+  const res = await fetch(`../api/pembayaran.php?action=${action}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: `booking_id=${encodeURIComponent(bookingId)}`
+  });
+  return res.json();
+}
+
+async function initPembayaran() {
+  try {
+    const data = await post('create');
+    if (!data.success) return tampilError(data.message || 'Gagal membuat tagihan.');
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('payArea').style.display = 'block';
+    document.getElementById('vaNumber').textContent = data.va;
+    document.getElementById('total').textContent = 'Rp ' + fmtRp(data.total);
+  } catch (err) {
+    tampilError('Kesalahan jaringan: ' + err.message);
+  }
+}
+
+async function simulasiBayar() {
+  const btn = document.getElementById('btnBayar');
+  btn.textContent = 'Memproses...';
+  btn.disabled = true;
+  try {
+    const data = await post('callback');   // simulasi notifikasi "pembayaran sukses"
+    if (!data.success) {
+      alert('❌ ' + (data.message || 'Pembayaran gagal.'));
+      btn.textContent = '✅ Bayar Sekarang (Simulasi)';
+      btn.disabled = false;
+      return;
+    }
+    alert('Pembayaran Berhasil!');
+    window.location.href = `struk.html?booking_id=${encodeURIComponent(bookingId)}`;
+  } catch (err) {
+    alert('❌ Kesalahan jaringan: ' + err.message);
+    btn.textContent = '✅ Bayar Sekarang (Simulasi)';
+    btn.disabled = false;
+  }
+}
+
+initPembayaran();
+</script>
+</body>
+</html>

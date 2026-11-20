@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login — SewaMobil</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <style>
+    body {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; background: #f3f4f6;
+    }
+    .login-card {
+      background: #fff; padding: 36px; border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.08); width: 100%; max-width: 400px;
+    }
+    .login-card h2 { text-align: center; margin-bottom: 8px; color: #2563eb; font-size: 24px; }
+    .login-card p.sub { text-align: center; color: #6b7280; font-size: 14px; margin-bottom: 24px; }
+    
+    .form-group { margin-bottom: 16px; }
+    .login-card label { font-size: 14px; font-weight: 600; display: block; margin-bottom: 6px; color: #374151; }
+    .login-card input {
+      width: 100%; padding: 12px 14px; border: 1px solid #d1d5db;
+      border-radius: 8px; font-size: 14px; transition: .2s;
+    }
+    .login-card input:focus {
+      outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,.15);
+    }
+    
+    .login-card button {
+      width: 100%; padding: 12px; background: #2563eb; color: #fff;
+      border: none; border-radius: 8px; font-weight: 700; cursor: pointer;
+      font-size: 15px; margin-top: 8px; transition: .2s;
+    }
+    .login-card button:hover { background: #1e40af; }
+    .login-card button:disabled { background: #9ca3af; cursor: not-allowed; }
+    
+    .info {
+      margin-top: 24px; padding: 16px; background: #f8fafc;
+      border: 1px solid #e2e8f0; border-radius: 8px; font-size: 13px; color: #475569; line-height: 1.6;
+    }
+    .alert {
+      padding: 12px; border-radius: 8px; font-size: 13px;
+      margin-bottom: 16px; display: none; text-align: center; font-weight: 500;
+    }
+    .alert.show { display: block; background: #fee2e2; color: #b91c1c; }
+  </style>
+</head>
+<body>
+
+  <form class="login-card" id="loginForm">
+    <h2>🚗 SewaMobil</h2>
+    <p class="sub">Masuk ke akun Anda</p>
+    
+    <div id="alert" class="alert"></div>
+    
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" name="email" required placeholder="nama@mail.com">
+    </div>
+    
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" name="password" required placeholder="••••••">
+    </div>
+    
+    <button type="submit" id="btnLogin">Masuk</button>
+
+    <div class="info">
+      <strong>Akun Demo:</strong><br>
+      👤 User &nbsp;&nbsp;: andi@mail.com / 123456<br>
+      🏢 Mitra : mitra@mail.com / 123456<br>
+      ⚙️ Admin : admin@mail.com / 123456
+    </div>
+  </form>
+
+<script>
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const btn = document.getElementById('btnLogin');
+  const alertBox = document.getElementById('alert');
+  
+  btn.disabled = true;
+  btn.textContent = 'Memproses...';
+  alertBox.classList.remove('show');
+
+  try {
+    const res = await fetch('api/login.php', {
+      method: 'POST',
+      body: new FormData(e.target)
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      // Redirect dinamis berdasarkan role
+      // Mendapatkan base URL folder saat ini
+      const path = window.location.pathname;
+      const basePath = path.substring(0, path.lastIndexOf('/')); 
+      
+      if (data.role === 'admin') {
+        window.location.href = basePath + '/admin/dashboard.html';
+      } else if (data.role === 'mitra') {
+        window.location.href = basePath + '/mitra/dashboard.html';
+      } else {
+        window.location.href = basePath + '/user/katalog.html';
+      }
+    } else {
+      alertBox.textContent = data.message || 'Email atau password salah.';
+      alertBox.classList.add('show');
+      btn.disabled = false;
+      btn.textContent = 'Masuk';
+    }
+  } catch (err) {
+    alertBox.textContent = 'Terjadi kesalahan jaringan.';
+    alertBox.classList.add('show');
+    btn.disabled = false;
+    btn.textContent = 'Masuk';
+  }
+});
+</script>
+</body>
+</html>

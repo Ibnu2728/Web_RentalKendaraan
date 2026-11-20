@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Katalog Mobil</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <style>
+    .katalog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; padding: 40px; }
+    .m-card { background: #fff; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,.08); overflow: hidden; }
+    .m-card img { width: 100%; height: 180px; object-fit: cover; background: #eee; }
+    .m-body { padding: 16px; }
+    .m-body h3 { margin-bottom: 8px; font-size: 18px; }
+    .m-price { color: #16a34a; font-weight: 700; font-size: 16px; margin-bottom: 12px; }
+  </style>
+</head>
+<body>
+  <header class="navbar">
+    <div class="logo">🚗 SewaMobil</div>
+    <nav>
+      <a href="katalog.html" style="color:#2563eb; font-weight:700;">Katalog</a>
+      <a href="#" onclick="logout(); return false;" class="btn-outline">Keluar</a>
+    </nav>
+  </header>
+
+  <div style="padding: 20px 40px;">
+    <h2 id="judul">Pilih Mobil Anda</h2>
+  </div>
+
+  <div id="katalog" class="katalog-grid">
+    <p>Memuat data...</p>
+  </div>
+
+<script src="../assets/js/auth.js"></script>
+<script>
+const jenis = new URLSearchParams(window.location.search).get('jenis') || '';
+const grid = document.getElementById('katalog');
+
+if (jenis === 'lepas_kunci')  document.getElementById('judul').textContent = '🔑 Mobil Lepas Kunci';
+if (jenis === 'dengan_supir') document.getElementById('judul').textContent = '🧑‍✈️ Mobil Dengan Supir';
+
+fetch('../api/katalog.php' + (jenis ? '?jenis=' + encodeURIComponent(jenis) : ''))
+  .then(r => r.json())
+  .then(({ success, data, message }) => {
+    if (!success) throw new Error(message || 'Gagal memuat katalog');
+    if (!data.length) {
+      grid.innerHTML = '<p style="grid-column:1/-1; text-align:center; color:#6b7280;">Belum ada mobil yang tersedia.</p>';
+      return;
+    }
+    grid.innerHTML = data.map(m => {
+      const showLK = jenis !== 'dengan_supir' && Number(m.harga_lepas_kunci) > 0;
+      const showSP = jenis !== 'lepas_kunci'  && Number(m.harga_dengan_supir) > 0;
+      const q = jenis ? `&jenis=${encodeURIComponent(jenis)}` : '';
+      return `
+      <div class="m-card">
+        <img src="${fotoSrc(m.foto_utama)}" alt="${esc(m.nama_mobil)}" onerror="this.onerror=null;this.src=NOIMG">
+        <div class="m-body">
+          <h3>${esc(m.nama_mobil)} <small>(${esc(m.tahun)})</small></h3>
+          ${showLK ? `<p style="color:#666; font-size:13px; margin-bottom:8px;">🔑 Lepas Kunci: Rp ${fmtRp(m.harga_lepas_kunci)}/hari</p>` : ''}
+          ${showSP ? `<p style="color:#666; font-size:13px; margin-bottom:12px;">🧑‍✈️ Dengan Supir: Rp ${fmtRp(m.harga_dengan_supir)}/hari</p>` : ''}
+          <a href="detail-mobil.html?id=${encodeURIComponent(m.id)}${q}" class="btn-primary" style="display:block; text-align:center;">Lihat &amp; Sewa</a>
+        </div>
+      </div>`;
+    }).join('');
+  })
+  .catch(err => { grid.innerHTML = `<p style="grid-column:1/-1; color:#b91c1c;">❌ ${esc(err.message)}</p>`; });
+</script>
+</body>
+</html>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Checkout</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <style>
+    .checkout-box { max-width: 600px; margin: 40px auto; background: #fff; padding: 32px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,.08); }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-weight: 600; margin-bottom: 6px; }
+    .form-group input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
+    .total-box { background: #f9fafb; padding: 16px; border-radius: 8px; margin: 20px 0; font-weight: bold; font-size: 18px; text-align: right; }
+  </style>
+</head>
+<body>
+<script src="../assets/js/auth.js"></script>
+<script>checkAuth('user');</script>
+
+<div class="checkout-box">
+  <h2>Formulir Penyewaan</h2>
+  <p id="infoMobil" style="color:#666; margin-bottom:20px;">Memuat data...</p>
+
+  <form id="formCheckout">
+    <input type="hidden" name="mobil_id" id="mobil_id">
+    <input type="hidden" name="jenis_sewa" id="jenis_sewa">
+
+    <div class="form-group">
+      <label>Tanggal Mulai</label>
+      <input type="date" name="tgl_mulai" id="tgl_mulai" required>
+    </div>
+    <div class="form-group">
+      <label>Tanggal Selesai</label>
+      <input type="date" name="tgl_selesai" id="tgl_selesai" required>
+    </div>
+
+    <div class="total-box" id="totalText">Total: Rp 0</div>
+    <button type="submit" id="btnSubmit" class="btn-primary" style="width:100%; padding:12px;" disabled>Lanjut ke Pembayaran</button>
+  </form>
+</div>
+
+<script>
+const params  = new URLSearchParams(window.location.search);
+const mobilId = params.get('id');
+const jenis   = params.get('jenis');
+let harga = 0, deposit = 0;
+
+const elMulai   = document.getElementById('tgl_mulai');
+const elSelesai = document.getElementById('tgl_selesai');
+const btn       = document.getElementById('btnSubmit');
+
+document.getElementById('mobil_id').value   = mobilId;
+document.getElementById('jenis_sewa').value = jenis;
+
+// Tanggal minimal = hari ini (waktu lokal, bukan UTC)
+const t = new Date();
+const today = `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
+elMulai.min = elSelesai.min = today;
+
+// Harga & deposit diambil dari server (bukan dari URL, supaya tidak bisa dimanipulasi di tampilan).
+// Total final tetap dihitung ulang oleh server saat booking.
+async function loadMobil() {
+  const info = document.getElementById('infoMobil');
+  try {
+    if (!['lepas_kunci', 'dengan_supir'].includes(jenis)) throw new Error('Jenis sewa tidak valid.');
+    const res  = await fetch(`../api/katalog.php?id=${encodeURIComponent(mobilId)}`);
+    const json = await res.json();
+    if (!json.success) throw new Error(json.message);
+    const m = json.data;
+    harga   = Number(jenis === 'lepas_kunci' ? m.harga_lepas_kunci : m.harga_dengan_supir);
+    deposit = jenis === 'lepas_kunci' ? Number(m.deposit) : 0;
+    if (harga <= 0) throw new Error('Mobil ini tidak melayani jenis sewa tersebut.');
+    info.innerHTML = `<b>${esc(m.nama_mobil)}</b> | Layanan: <b>${esc(jenis.replace(/_/g, ' ').toUpperCase())}</b> | Rp ${fmtRp(harga)}/hari`;
+    btn.disabled = false;
+    hitungTotal();
+  } catch (err) {
+    info.innerHTML = `<span style="color:#b91c1c;">❌ ${esc(err.message)}</span>`;
+  }
+}
+
+function hitungTotal() {
+  const a = elMulai.value, b = elSelesai.value;
+  if (!a || !b || b < a) { document.getElementById('totalText').textContent = 'Total: Rp 0'; return; }
+  const hari  = Math.max(1, Math.round((new Date(b) - new Date(a)) / 86400000));
+  const total = harga * hari + deposit;
+  document.getElementById('totalText').textContent =
+    `Total (${hari} hari${deposit ? ' + deposit' : ''}): Rp ${fmtRp(total)}`;
+}
+
+elMulai.addEventListener('change', () => {
+  elSelesai.min = elMulai.value || today;
+  if (elSelesai.value && elSelesai.value < elMulai.value) elSelesai.value = elMulai.value;
+  hitungTotal();
+});
+elSelesai.addEventListener('change', hitungTotal);
+
+document.getElementById('formCheckout').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  btn.textContent = 'Memproses...';
+  btn.disabled = true;
+
+  try {
+    const res  = await fetch('../api/booking.php', { method: 'POST', body: new FormData(e.target) });
+    const data = await res.json();
+    if (data.success) {
+      window.location.href = `pembayaran.html?booking_id=${data.booking_id}`;
+      return;
+    }
+    if (res.status === 401) { window.location.href = '../login.html'; return; }
+    alert('❌ ' + data.message);
+  } catch (err) {
+    alert('❌ Kesalahan jaringan: ' + err.message);
+  }
+  btn.textContent = 'Lanjut ke Pembayaran';
+  btn.disabled = false;
+});
+
+loadMobil();
+</script>
+</body>
+</html>

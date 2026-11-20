@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Mitra — Mobil Saya</title>
+  <link rel="stylesheet" href="../assets/css/admin.css">
+  <style>
+    .mobil-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .mobil-card {
+      background: #fff; border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.06);
+      overflow: hidden; display: flex; flex-direction: column;
+    }
+    .mobil-card .thumb {
+      width: 100%; height: 170px;
+      object-fit: cover; background: #f3f4f6;
+    }
+    .mobil-card .body { padding: 16px; flex: 1; }
+    .mobil-card h3 { font-size: 16px; margin-bottom: 4px; }
+    .mobil-card .plat {
+      display: inline-block; background: #111827; color: #fff;
+      font-size: 11px; padding: 2px 8px; border-radius: 4px;
+      margin-bottom: 10px; font-family: monospace;
+    }
+    .mobil-card .harga { font-size: 13px; color: #374151; margin: 4px 0; }
+    .mobil-card .harga strong { color: #16a34a; }
+    .mobil-card .status {
+      display: inline-block; padding: 3px 10px;
+      border-radius: 20px; font-size: 11px; font-weight: 600;
+    }
+    .status-tersedia { background: #dcfce7; color: #15803d; }
+    .status-disewa   { background: #fef3c7; color: #b45309; }
+    .status-nonaktif { background: #fee2e2; color: #b91c1c; }
+    .mobil-card .actions {
+      display: flex; gap: 8px;
+      padding: 12px 16px; border-top: 1px solid #e5e7eb;
+      background: #f9fafb;
+    }
+    .mobil-card .actions button,
+    .mobil-card .actions a {
+      flex: 1; text-align: center; padding: 8px;
+      border: none; border-radius: 6px;
+      font-size: 13px; cursor: pointer;
+      font-weight: 600; text-decoration: none;
+    }
+    .btn-edit  { background: #dbeafe; color: #1e40af; }
+    .btn-hapus { background: #fee2e2; color: #b91c1c; }
+    .btn-edit:hover  { background: #bfdbfe; }
+    .btn-hapus:hover { background: #fecaca; }
+    .empty {
+      text-align: center; padding: 60px 20px;
+      color: #6b7280; background: #fff;
+      border-radius: 12px; border: 2px dashed #e5e7eb;
+    }
+    .empty .icon { font-size: 48px; margin-bottom: 12px; }
+  </style>
+</head>
+<body>
+<script src="../assets/js/auth.js"></script>
+<script>checkAuth('mitra');</script>
+<div class="admin-layout">
+  <aside class="sidebar">
+    <div class="logo">🏢 Mitra Panel</div>
+    <nav>
+      <a href="dashboard.html">📊 Dashboard</a>
+      <a href="mobil-saya.html" class="active">🚗 Mobil Saya</a>
+      <a href="tambah-mobil.html">➕ Tambah Mobil</a>
+      <a href="booking-masuk.html">📋 Booking Masuk</a>
+      <a href="pendapatan.html">💰 Pendapatan</a>
+      <a href="profil.html">👤 Profil</a>
+      <a href="#" onclick="logout(); return false;">🚪 Keluar</a>
+    </nav>
+  </aside>
+
+  <main class="main-content">
+    <header class="topbar">
+      <h1>🚗 Mobil Saya</h1>
+      <a href="tambah-mobil.html" class="btn-primary">➕ Tambah Mobil</a>
+    </header>
+
+    <div id="listMobil" class="mobil-grid">
+      <div class="empty"><div class="icon">⏳</div><p>Memuat data...</p></div>
+    </div>
+  </main>
+</div>
+
+<script>
+async function loadMobil() {
+  const wrap = document.getElementById('listMobil');
+  try {
+    const res = await fetch('../api/mobil.php');
+    const data = await res.json();
+
+    if (!data.success) throw new Error(data.message || 'Gagal memuat data');
+
+    if (!data.data.length) {
+      wrap.innerHTML = `
+        <div class="empty" style="grid-column:1/-1">
+          <div class="icon">🚙</div>
+          <h3>Belum ada mobil terdaftar</h3>
+          <p>Tambahkan mobil pertama Anda agar muncul di katalog penyewa.</p>
+          <br>
+          <a href="tambah-mobil.html" class="btn-primary">➕ Tambah Mobil Pertama</a>
+        </div>`;
+      return;
+    }
+
+    wrap.innerHTML = data.data.map(m => `
+      <div class="mobil-card">
+        <img class="thumb" src="${fotoSrc(m.foto_utama)}" alt="${esc(m.nama_mobil)}" onerror="this.onerror=null;this.src=NOIMG">
+        <div class="body">
+          <h3>${esc(m.nama_mobil)}</h3>
+          <span class="plat">${esc(m.plat_nomor)}</span>
+          <div class="harga">🔑 Lepas Kunci: <strong>Rp ${fmtRp(m.harga_lepas_kunci)}</strong>/hari</div>
+          <div class="harga">🧑‍✈️ Dengan Supir: <strong>Rp ${fmtRp(m.harga_dengan_supir)}</strong>/hari</div>
+          <div style="margin-top:10px;">
+            <span class="status status-${esc(m.status)}">${esc(String(m.status).toUpperCase())}</span>
+          </div>
+        </div>
+        <div class="actions">
+          <a href="edit-mobil.html?id=${encodeURIComponent(m.id)}" class="btn-edit">✏️ Edit</a>
+          <button class="btn-hapus" data-id="${esc(m.id)}" data-nama="${esc(m.nama_mobil)}"
+                  ${m.status === 'nonaktif' ? 'disabled style="opacity:.5;cursor:not-allowed"' : ''}>🗑️ Nonaktifkan</button>
+        </div>
+      </div>
+    `).join('');
+
+  } catch (err) {
+    wrap.innerHTML = `<div class="empty" style="grid-column:1/-1"><p>❌ Gagal memuat: ${esc(err.message)}</p></div>`;
+  }
+}
+
+document.getElementById('listMobil').addEventListener('click', (e) => {
+  const btn = e.target.closest('.btn-hapus');
+  if (btn && !btn.disabled) hapusMobil(btn.dataset.id, btn.dataset.nama);
+});
+
+async function hapusMobil(id, nama) {
+  if (!confirm(`Nonaktifkan "${nama}" dari katalog? Data historis tetap aman.`)) return;
+
+  const res = await fetch('../api/mobil.php', {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id: Number(id) })
+  });
+  const data = await res.json();
+
+  alert(data.success ? '✅ ' + data.message : '❌ ' + data.message);
+  if (data.success) loadMobil();
+}
+
+loadMobil();
+</script>
+</body>
+</html>

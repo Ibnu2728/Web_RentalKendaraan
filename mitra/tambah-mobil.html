@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mitra — Tambah Mobil</title>
+  <link rel="stylesheet" href="../assets/css/admin.css">
+  <style>
+    .form-card {
+      background: #fff; padding: 32px;
+      border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.06);
+      max-width: 900px;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+    .form-group { display: flex; flex-direction: column; }
+    .form-group.full { grid-column: 1 / -1; }
+    .form-group label {
+      font-weight: 600; font-size: 14px;
+      margin-bottom: 6px; color: #374151;
+    }
+    .form-group input, .form-group select, .form-group textarea {
+      padding: 10px 14px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      transition: .2s;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      outline: none; border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37,99,235,.15);
+    }
+
+    /* UPLOAD BOX */
+    .upload-box {
+      border: 2px dashed #d1d5db;
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: .2s;
+      background: #f9fafb;
+    }
+    .upload-box:hover { border-color: #2563eb; background: #eff6ff; }
+    .upload-box input { display: none; }
+    .upload-box .icon { font-size: 36px; }
+    .upload-box p { font-size: 13px; color: #6b7280; margin-top: 8px; }
+    .preview {
+      max-width: 100%; max-height: 180px;
+      border-radius: 8px; margin-top: 12px;
+      display: none;
+    }
+    .upload-box.has-file .preview { display: block; margin: 12px auto 0; }
+    .upload-box.has-file .placeholder { display: none; }
+
+    /* SECTION DIVIDER */
+    .divider {
+      grid-column: 1/-1;
+      border-top: 2px dashed #e5e7eb;
+      padding-top: 20px;
+      margin-top: 8px;
+    }
+    .divider h3 {
+      font-size: 16px; color: #2563eb;
+      margin-bottom: 4px;
+    }
+    .divider p { font-size: 13px; color: #6b7280; }
+
+    /* ACTION BUTTONS */
+    .form-actions {
+      grid-column: 1/-1;
+      display: flex; gap: 12px;
+      justify-content: flex-end;
+      margin-top: 16px;
+      padding-top: 20px;
+      border-top: 1px solid #e5e7eb;
+    }
+    .btn-secondary {
+      padding: 10px 20px; border-radius: 8px;
+      background: #f3f4f6; color: #374151;
+      border: none; cursor: pointer; font-weight: 600;
+      text-decoration: none;
+    }
+    .btn-secondary:hover { background: #e5e7eb; }
+
+    /* ALERT */
+    .alert {
+      padding: 12px 16px; border-radius: 8px;
+      margin-bottom: 16px; font-size: 14px; display: none;
+    }
+    .alert.show { display: block; }
+    .alert-success { background: #dcfce7; color: #15803d; }
+    .alert-error   { background: #fee2e2; color: #b91c1c; }
+
+    @media (max-width: 700px) {
+      .form-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<script src="../assets/js/auth.js"></script>
+<script>checkAuth('mitra');</script>
+<div class="admin-layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="logo">🏢 Mitra Panel</div>
+    <nav>
+      <a href="dashboard.html">📊 Dashboard</a>
+      <a href="mobil-saya.html">🚗 Mobil Saya</a>
+      <a href="tambah-mobil.html" class="active">➕ Tambah Mobil</a>
+      <a href="booking-masuk.html">📋 Booking Masuk</a>
+      <a href="pendapatan.html">💰 Pendapatan</a>
+      <a href="profil.html">👤 Profil</a>
+      <a href="#" onclick="logout(); return false;">🚪 Keluar</a>
+    </nav>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main-content">
+    <header class="topbar">
+      <h1>➕ Tambah Mobil Baru</h1>
+      <div class="user-info">🏢 PT Sewa Jaya</div>
+    </header>
+
+    <div class="form-card">
+      <div id="alertBox" class="alert"></div>
+
+      <form id="formMobil" class="form-grid" enctype="multipart/form-data">
+
+        <!-- ===== DATA MOBIL ===== -->
+        <div class="divider">
+          <h3>🚗 Data Mobil</h3>
+          <p>Isi data kendaraan yang akan disewakan.</p>
+        </div>
+
+        <div class="form-group">
+          <label>Nama Mobil *</label>
+          <input type="text" name="nama_mobil" placeholder="Contoh: Toyota Avanza" required>
+        </div>
+
+        <div class="form-group">
+          <label>Merk</label>
+          <input type="text" name="merk" placeholder="Toyota, Honda, Daihatsu...">
+        </div>
+
+        <div class="form-group">
+          <label>Plat Nomor *</label>
+          <input type="text" name="plat_nomor" placeholder="B 1234 XYZ" required style="text-transform:uppercase">
+        </div>
+
+        <div class="form-group">
+          <label>Tahun</label>
+          <input type="number" name="tahun" min="2000" max="2030" placeholder="2023">
+        </div>
+
+        <div class="form-group">
+          <label>Transmisi</label>
+          <select name="transmisi">
+            <option value="manual">Manual</option>
+            <option value="matic">Matic</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Kapasitas Penumpang</label>
+          <input type="number" name="kapasitas" min="1" max="20" placeholder="7">
+        </div>
+
+        <!-- ===== HARGA & PAKET ===== -->
+        <div class="divider">
+          <h3>💰 Harga & Paket Sewa</h3>
+          <p>Harga per hari untuk masing-masing jenis layanan.</p>
+        </div>
+
+        <div class="form-group">
+          <label>Harga Lepas Kunci / Hari (Rp) *</label>
+          <input type="number" name="harga_lepas_kunci" placeholder="350000" min="0" required>
+        </div>
+
+        <div class="form-group">
+          <label>Harga Dengan Supir / Hari (Rp)</label>
+          <input type="number" name="harga_dengan_supir" placeholder="650000" min="0">
+        </div>
+
+        <div class="form-group">
+          <label>Deposit Jaminan (Rp)</label>
+          <input type="number" name="deposit" value="500000" min="0">
+          <small style="color:#6b7280;font-size:12px;margin-top:4px;">
+            💡 Lepas kunci: Rp 500.000 | Dengan supir: Rp 0
+          </small>
+        </div>
+
+        <!-- ===== FOTO ===== -->
+        <div class="divider">
+          <h3>📸 Foto Kendaraan</h3>
+          <p>Foto tajam & jelas meningkatkan kepercayaan penyewa.</p>
+        </div>
+
+        <div class="form-group">
+          <label>Foto Utama (tampil di katalog)</label>
+          <label class="upload-box" id="boxFotoUtama">
+            <input type="file" name="foto_utama" accept="image/*" onchange="previewImg(this, 'boxFotoUtama')">
+            <div class="placeholder">
+              <div class="icon">📷</div>
+              <p><strong>Klik untuk upload</strong><br>JPG, PNG, WEBP • Maks 5MB</p>
+            </div>
+            <img class="preview" alt="Preview">
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label>Foto 360° / Serah Terima</label>
+          <label class="upload-box" id="boxFoto360">
+            <input type="file" name="foto_360" accept="image/*" onchange="previewImg(this, 'boxFoto360')">
+            <div class="placeholder">
+              <div class="icon">🔄</div>
+              <p><strong>Klik untuk upload</strong><br>Foto fisheye/360° untuk serah terima</p>
+            </div>
+            <img class="preview" alt="Preview">
+          </label>
+        </div>
+
+        <!-- ===== DESKRIPSI ===== -->
+        <div class="form-group full">
+          <label>Deskripsi Tambahan</label>
+          <textarea name="deskripsi" rows="4" placeholder="Fasilitas: AC, GPS, audio, dll."></textarea>
+        </div>
+
+        <!-- ===== ACTION ===== -->
+        <div class="form-actions">
+          <a href="mobil-saya.html" class="btn-secondary">Batal</a>
+          <button type="submit" class="btn-primary" id="btnSubmit">💾 Simpan & Publikasikan</button>
+        </div>
+
+      </form>
+    </div>
+  </main>
+</div>
+
+<script src="../assets/js/mitra.js"></script>
+</body>
+</html>

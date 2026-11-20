@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Detail Mobil</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <style>
+    .detail-wrap { max-width: 900px; margin: 40px auto; background: #fff; padding: 32px; border-radius: 16px; display: flex; gap: 32px; box-shadow: 0 4px 12px rgba(0,0,0,.08); }
+    .img-box { flex: 1; }
+    .img-box img { width: 100%; border-radius: 12px; }
+    .info-box { flex: 1; }
+    .info-box h1 { margin-bottom: 8px; }
+    .info-box .harga { font-size: 24px; color: #16a34a; font-weight: 700; margin: 16px 0; }
+    .radio-group { display: flex; gap: 12px; margin: 16px 0; }
+    .radio-card { flex: 1; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; cursor: pointer; text-align: center; }
+    .radio-card input { display: none; }
+    .radio-card.active { border-color: #2563eb; background: #eff6ff; }
+  </style>
+</head>
+<body>
+  <header class="navbar">
+    <div class="logo">🚗 SewaMobil</div>
+    <nav><a href="katalog.html">⬅️ Kembali ke Katalog</a></nav>
+  </header>
+
+  <div id="detail" class="detail-wrap">
+    <p>Memuat...</p>
+  </div>
+
+<script src="../assets/js/auth.js"></script>
+<script>
+const params = new URLSearchParams(window.location.search);
+const id = params.get('id');
+let mobil = null;
+let jenisDipilih = 'lepas_kunci';
+
+async function load() {
+  const box = document.getElementById('detail');
+  try {
+    const res = await fetch(`../api/katalog.php?id=${encodeURIComponent(id)}`);
+    const json = await res.json();
+    if (!json.success) throw new Error(json.message);
+    mobil = json.data;
+  } catch (err) {
+    box.innerHTML = `<p style="color:#b91c1c;">❌ ${esc(err.message || 'Mobil tidak ditemukan.')}</p>`;
+    return;
+  }
+
+  const adaLK = Number(mobil.harga_lepas_kunci) > 0;
+  const adaSP = Number(mobil.harga_dengan_supir) > 0;
+  const minta = params.get('jenis');
+  jenisDipilih = (minta === 'dengan_supir' && adaSP) || !adaLK ? 'dengan_supir' : 'lepas_kunci';
+
+  box.innerHTML = `
+    <div class="img-box">
+      <img src="${fotoSrc(mobil.foto_utama)}" alt="${esc(mobil.nama_mobil)}" onerror="this.onerror=null;this.src=NOIMG">
+    </div>
+    <div class="info-box">
+      <h1>${esc(mobil.nama_mobil)}</h1>
+      <p style="color:#666;">Plat: ${esc(mobil.plat_nomor)} • ${esc(mobil.transmisi)} • ${esc(mobil.kapasitas)} Kursi</p>
+      <p style="color:#666; font-size:13px; margin-top:4px;">Mitra: ${esc(mobil.nama_usaha)}</p>
+      ${mobil.deskripsi ? `<p style="margin-top:12px;">${esc(mobil.deskripsi)}</p>` : ''}
+
+      <div class="harga" id="hargaTampil"></div>
+
+      <h3 style="margin-bottom:8px;">Pilih Layanan:</h3>
+      <div class="radio-group">
+        <label class="radio-card" data-jenis="lepas_kunci" ${adaLK ? '' : 'style="opacity:.4; pointer-events:none;"'}>
+          <strong>🔑 Lepas Kunci</strong><br>
+          <small>Deposit Rp ${fmtRp(mobil.deposit)}</small>
+        </label>
+        <label class="radio-card" data-jenis="dengan_supir" ${adaSP ? '' : 'style="opacity:.4; pointer-events:none;"'}>
+          <strong>🧑‍✈️ Dengan Supir</strong><br>
+          <small>Bebas Deposit (Rp 0)</small>
+        </label>
+      </div>
+
+      <a href="#" id="btnCheckout" class="btn-primary" style="display:block; text-align:center; margin-top:24px;">Lanjut ke Checkout</a>
+    </div>`;
+
+  box.querySelectorAll('.radio-card').forEach(el =>
+    el.addEventListener('click', () => pilih(el.dataset.jenis)));
+  pilih(jenisDipilih);
+}
+
+function pilih(jenis) {
+  jenisDipilih = jenis;
+  document.querySelectorAll('.radio-card').forEach(c =>
+    c.classList.toggle('active', c.dataset.jenis === jenis));
+  const harga = jenis === 'lepas_kunci' ? mobil.harga_lepas_kunci : mobil.harga_dengan_supir;
+  document.getElementById('hargaTampil').innerHTML =
+    `Rp ${fmtRp(harga)} <span style="font-size:14px; color:#666; font-weight:normal;">/ hari</span>`;
+  document.getElementById('btnCheckout').href =
+    `checkout.html?id=${encodeURIComponent(id)}&jenis=${jenis}`;
+}
+
+load();
+</script>
+</body>
+</html>
