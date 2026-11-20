@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin — Kelola User</title>
+  <link rel="stylesheet" href="../assets/css/admin.css">
+  <link rel="stylesheet" href="../assets/css/mitra.css">
+</head>
+<body>
+<script src="../assets/js/auth.js"></script>
+<script>checkAuth('admin');</script>
+<div class="admin-layout">
+  <aside class="sidebar">
+    <div class="logo">⚙️ Admin Panel</div>
+    <nav>
+      <a href="dashboard.html">📊 Dashboard</a>
+      <a href="kelola-user.html" class="active">👥 Kelola User</a>
+      <a href="kelola-mitra.html">🏢 Kelola Mitra</a>
+      <a href="verifikasi-mitra.html">✅ Verifikasi Mitra</a>
+      <a href="kelola-mobil.html">🚗 Kelola Mobil</a>
+      <a href="kelola-booking.html">📋 Kelola Booking</a>
+      <a href="verifikasi-pembayaran.html">💳 Verifikasi Pembayaran</a>
+      <a href="laporan-keuangan.html">💰 Laporan Keuangan</a>
+      <a href="pengaturan.html">⚙️ Pengaturan</a>
+      <a href="#" onclick="logout(); return false;">🚪 Keluar</a>
+    </nav>
+  </aside>
+
+  <main class="main-content">
+    <header class="topbar"><h1>Kelola User</h1></header>
+    <p style="color:#6b7280; margin-bottom:20px;">Semua akun terdaftar. Akun nonaktif tidak bisa login. Akun Anda sendiri tidak bisa dinonaktifkan dari sini.</p>
+
+    <section class="table-section">
+      <table>
+        <thead>
+          <tr><th>ID</th><th>Nama</th><th>Email</th><th>No. HP</th><th>Role</th><th>Status</th><th>Terdaftar</th><th>Aksi</th></tr>
+        </thead>
+        <tbody id="tabelUser"><tr><td colspan="8">Memuat data...</td></tr></tbody>
+      </table>
+    </section>
+  </main>
+</div>
+
+<script src="../assets/js/admin.js"></script>
+<script>
+async function muatUser() {
+  const tbody = document.getElementById('tabelUser');
+  try {
+    const data = await apiGet('users');
+    tbody.innerHTML = data.data.length ? data.data.map(u => `<tr>
+      <td>${u.id}</td>
+      <td>${esc(u.nama)}</td>
+      <td>${esc(u.email)}</td>
+      <td>${esc(u.no_hp || '-')}</td>
+      <td>${esc(u.role)}</td>
+      <td>${badgeAkun(u.status)}</td>
+      <td>${esc(String(u.created_at || '').slice(0, 10))}</td>
+      <td>${u.status === 'aktif'
+        ? `<button class="btn-sm btn-no" onclick="aksiKonfirmasi('Nonaktifkan akun ${esc(u.nama)}?', 'user_status', {id: ${u.id}, status: 'nonaktif'})">Nonaktifkan</button>`
+        : `<button class="btn-sm btn-ok" onclick="aksiKonfirmasi('Aktifkan kembali akun ${esc(u.nama)}?', 'user_status', {id: ${u.id}, status: 'aktif'})">Aktifkan</button>`}</td>
+    </tr>`).join('') : '<tr><td colspan="8">Belum ada user.</td></tr>';
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="8">❌ ${esc(err.message)}</td></tr>`;
+  }
+}
+muatUser();
+</script>
+</body>
+</html>

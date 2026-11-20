@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Mitra — Booking Masuk</title>
+  <link rel="stylesheet" href="../assets/css/admin.css">
+  <link rel="stylesheet" href="../assets/css/mitra.css">
+</head>
+<body>
+<script src="../assets/js/auth.js"></script>
+<script>checkAuth('mitra');</script>
+<div class="admin-layout">
+  <aside class="sidebar">
+    <div class="logo">🏢 Mitra Panel</div>
+    <nav>
+      <a href="dashboard.html">📊 Dashboard</a>
+      <a href="mobil-saya.html">🚗 Mobil Saya</a>
+      <a href="tambah-mobil.html">➕ Tambah Mobil</a>
+      <a href="booking-masuk.html" class="active">📋 Booking Masuk</a>
+      <a href="pendapatan.html">💰 Pendapatan</a>
+      <a href="profil.html">👤 Profil</a>
+      <a href="#" onclick="logout(); return false;">🚪 Keluar</a>
+    </nav>
+  </aside>
+
+  <main class="main-content">
+    <header class="topbar"><h1>Booking Masuk</h1></header>
+    <p style="color:#6b7280; margin-bottom:20px;">
+      Booking yang sudah dibayar berstatus <b>Dikonfirmasi</b> — ubah menjadi <b>Aktif</b> saat serah terima unit,
+      lalu <b>Selesai</b> saat unit kembali. Booking pending yang belum dibayar juga bisa ditolak dari sini.
+    </p>
+
+    <section class="table-section">
+      <table>
+        <thead>
+          <tr><th>Kode</th><th>Mobil</th><th>Penyewa</th><th>Layanan</th><th>Tanggal</th><th>Total</th><th>Status</th><th>Aksi</th></tr>
+        </thead>
+        <tbody id="tabelBooking"><tr><td colspan="8">Memuat data...</td></tr></tbody>
+      </table>
+    </section>
+  </main>
+</div>
+
+<script>
+function tombolAksi(b) {
+  const btn = [];
+  if (b.status === 'dikonfirmasi') {
+    btn.push(`<button class="btn-sm btn-ok" onclick="ubahStatus(${b.id}, 'aktif')">▶ Serah Terima</button>`);
+    btn.push(`<button class="btn-sm btn-no" onclick="ubahStatus(${b.id}, 'batal')">✖ Tolak</button>`);
+  } else if (b.status === 'aktif') {
+    btn.push(`<button class="btn-sm btn-info" onclick="ubahStatus(${b.id}, 'selesai')">✔ Selesai</button>`);
+  } else if (b.status === 'pending') {
+    btn.push(`<button class="btn-sm btn-no" onclick="ubahStatus(${b.id}, 'batal')">✖ Tolak</button>`);
+  }
+  return btn.length ? `<div class="aksi-cell">${btn.join('')}</div>` : '<small>—</small>';
+}
+
+async function muatBooking() {
+  const tbody = document.getElementById('tabelBooking');
+  try {
+    const res = await fetch('../api/mitra.php?action=booking');
+    const data = await res.json();
+    if (!data.success) throw new Error(data.message);
+    tbody.innerHTML = data.data.length ? data.data.map(b => `<tr>
+      <td>${esc(b.kode_booking)}</td>
+      <td>${esc(b.nama_mobil)}<br><small>${esc(b.plat_nomor || '')}</small></td>
+      <td>${esc(b.penyewa)}<br><small>${esc(b.hp_penyewa || '')}</small></td>
+      <td>${esc(String(b.jenis_sewa).replace(/_/g, ' '))}</td>
+      <td>${esc(b.tgl_mulai)} s/d ${esc(b.tgl_selesai)}</td>
+      <td>Rp ${fmtRp(b.total_bayar)}</td>
+      <td>${badgeStatus(b.status)}</td>
+      <td>${tombolAksi(b)}</td>
+    </tr>`).join('') : '<tr><td colspan="8">Belum ada booking masuk.</td></tr>';
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="8">❌ ${esc(err.message)}</td></tr>`;
+  }
+}
+
+async function ubahStatus(id, status) {
+  const label = { aktif: 'serah terima unit', selesai: 'menyelesaikan booking', batal: 'menolak/membatalkan booking' }[status];
+  if (!confirm(`Yakin ingin ${label} ini?`)) return;
+  const fd = new FormData();
+  fd.append('booking_id', id);
+  fd.append('status', status);
+  const res = await fetch('../api/mitra.php?action=status', { method: 'POST', body: fd });
+  const data = await res.json();
+  alert(data.message || (data.success ? 'Berhasil.' : 'Gagal.'));
+  if (data.success) muatBooking();
+}
+
+muatBooking();
+</script>
+</body>
+</html>

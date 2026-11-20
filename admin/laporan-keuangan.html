@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin — Laporan Keuangan</title>
+  <link rel="stylesheet" href="../assets/css/admin.css">
+  <link rel="stylesheet" href="../assets/css/mitra.css">
+</head>
+<body>
+<script src="../assets/js/auth.js"></script>
+<script>checkAuth('admin');</script>
+<div class="admin-layout">
+  <aside class="sidebar">
+    <div class="logo">⚙️ Admin Panel</div>
+    <nav>
+      <a href="dashboard.html">📊 Dashboard</a>
+      <a href="kelola-user.html">👥 Kelola User</a>
+      <a href="kelola-mitra.html">🏢 Kelola Mitra</a>
+      <a href="verifikasi-mitra.html">✅ Verifikasi Mitra</a>
+      <a href="kelola-mobil.html">🚗 Kelola Mobil</a>
+      <a href="kelola-booking.html">📋 Kelola Booking</a>
+      <a href="verifikasi-pembayaran.html">💳 Verifikasi Pembayaran</a>
+      <a href="laporan-keuangan.html" class="active">💰 Laporan Keuangan</a>
+      <a href="pengaturan.html">⚙️ Pengaturan</a>
+      <a href="#" onclick="logout(); return false;">🚪 Keluar</a>
+    </nav>
+  </aside>
+
+  <main class="main-content">
+    <header class="topbar"><h1>Laporan Keuangan</h1></header>
+
+    <section class="laporan-section">
+      <div class="filter-bar">
+        <label>Dari: <input type="date" id="tglDari"></label>
+        <label>Sampai: <input type="date" id="tglSampai"></label>
+        <button class="btn-primary" onclick="muatLaporan()">Filter</button>
+        <button class="btn-outline" onclick="window.print()">🖨️ Cetak</button>
+      </div>
+    </section>
+
+    <div class="stats-grid" style="margin-top:24px;">
+      <div class="stat-card"><span class="stat-icon">⬇️</span><div><p>Total Pemasukan</p><h3 id="sumMasuk">–</h3></div></div>
+      <div class="stat-card"><span class="stat-icon">⬆️</span><div><p>Total Pengeluaran</p><h3 id="sumKeluar">–</h3></div></div>
+      <div class="stat-card"><span class="stat-icon">💰</span><div><p>Saldo Periode</p><h3 id="sumSaldo">–</h3></div></div>
+    </div>
+
+    <section class="table-section">
+      <h2>Pemasukan per Hari (pembayaran lunas)</h2>
+      <table>
+        <thead><tr><th>Tanggal</th><th>Total</th></tr></thead>
+        <tbody id="tabelMasuk"><tr><td colspan="2">Memuat data...</td></tr></tbody>
+      </table>
+    </section>
+
+    <section class="table-section">
+      <h2>Pengeluaran Operasional</h2>
+      <table>
+        <thead><tr><th>Tanggal</th><th>Kategori</th><th>Keterangan</th><th>Jumlah</th><th>Dicatat oleh</th><th>Aksi</th></tr></thead>
+        <tbody id="tabelKeluar"><tr><td colspan="6">Memuat data...</td></tr></tbody>
+      </table>
+    </section>
+
+    <form class="form-box" id="formKeluar">
+      <h2>➕ Catat Pengeluaran</h2>
+      <div id="alertBox" class="alert"></div>
+      <div class="form-group">
+        <label>Tanggal</label>
+        <input type="date" name="tanggal" id="fTanggal" required>
+      </div>
+      <div class="form-group">
+        <label>Kategori</label>
+        <input type="text" name="kategori" required placeholder="cth. Operasional, Gaji, Perawatan, Marketing">
+      </div>
+      <div class="form-group">
+        <label>Keterangan</label>
+        <input type="text" name="keterangan" placeholder="cth. Servis berkala unit kantor">
+      </div>
+      <div class="form-group">
+        <label>Jumlah (Rp)</label>
+        <input type="number" name="jumlah" min="1" step="any" required placeholder="0">
+      </div>
+      <button type="submit" class="btn-primary">💾 Simpan Pengeluaran</button>
+    </form>
+  </main>
+</div>
+
+<script src="../assets/js/admin.js"></script>
+<script>
+function isoLokal(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+async function muatLaporan() {
+  const dari = document.getElementById('tglDari').value;
+  const sampai = document.getElementById('tglSampai').value;
+  if (!dari || !sampai || sampai < dari) { alert('Rentang tanggal tidak valid.'); return; }
+  try {
+    const lap = await apiGet('laporan', { dari, sampai });
+    document.getElementById('sumMasuk').textContent = 'Rp ' + fmtRp(lap.total_pemasukan);
+    document.getElementById('sumKeluar').textContent = 'Rp ' + fmtRp(lap.total_pengeluaran);
+    document.getElementById('sumSaldo').textContent = 'Rp ' + fmtRp(lap.saldo);
+    document.getElementById('tabelMasuk').innerHTML = lap.pemasukan.length
+      ? lap.pemasukan.map(r => `<tr><td>${esc(r.tanggal)}</td><td>Rp ${fmtRp(r.total)}</td></tr>`).join('')
+      : '<tr><td colspan="2">Tidak ada pemasukan pada rentang ini.</td></tr>';
+
+    const kel = await apiGet('pengeluaran');
+    const dalamRentang = kel.data.filter(p => p.tanggal >= dari && p.tanggal <= sampai);
+    document.getElementById('tabelKeluar').innerHTML = dalamRentang.length
+      ? dalamRentang.map(p => `<tr>
+          <td>${esc(p.tanggal)}</td><td>${esc(p.kategori)}</td><td>${esc(p.keterangan || '-')}</td>
+          <td>Rp ${fmtRp(p.jumlah)}</td><td>${esc(p.dicatat_oleh_nama)}</td>
+          <td><button class="btn-sm btn-no" onclick="aksiKonfirmasi('Hapus pengeluaran ini?', 'pengeluaran_hapus', {id: ${p.id}})">Hapus</button></td>
+        </tr>`).join('')
+      : '<tr><td colspan="6">Tidak ada pengeluaran pada rentang ini.</td></tr>';
+  } catch (err) {
+    alert('❌ ' + err.message);
+  }
+}
+
+document.getElementById('formKeluar').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const box = document.getElementById('alertBox');
+  const fd = new FormData(e.target);
+  const fields = Object.fromEntries(fd.entries());
+  try {
+    const data = await apiPost('pengeluaran_tambah', fields);
+    box.className = 'alert show alert-success';
+    box.textContent = '✅ ' + (data.message || 'Pengeluaran tercatat.');
+    e.target.reset();
+    document.getElementById('fTanggal').value = isoLokal(new Date());
+    muatLaporan();
+  } catch (err) {
+    box.className = 'alert show alert-error';
+    box.textContent = '❌ ' + err.message;
+  }
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  const now = new Date();
+  document.getElementById('tglDari').value = isoLokal(new Date(now.getFullYear(), now.getMonth(), 1));
+  document.getElementById('tglSampai').value = isoLokal(now);
+  document.getElementById('fTanggal').value = isoLokal(now);
+  muatLaporan();
+});
+</script>
+</body>
+</html>

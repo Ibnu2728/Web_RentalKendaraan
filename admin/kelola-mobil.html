@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin — Kelola Mobil</title>
+  <link rel="stylesheet" href="../assets/css/admin.css">
+  <link rel="stylesheet" href="../assets/css/mitra.css">
+</head>
+<body>
+<script src="../assets/js/auth.js"></script>
+<script>checkAuth('admin');</script>
+<div class="admin-layout">
+  <aside class="sidebar">
+    <div class="logo">⚙️ Admin Panel</div>
+    <nav>
+      <a href="dashboard.html">📊 Dashboard</a>
+      <a href="kelola-user.html">👥 Kelola User</a>
+      <a href="kelola-mitra.html">🏢 Kelola Mitra</a>
+      <a href="verifikasi-mitra.html">✅ Verifikasi Mitra</a>
+      <a href="kelola-mobil.html" class="active">🚗 Kelola Mobil</a>
+      <a href="kelola-booking.html">📋 Kelola Booking</a>
+      <a href="verifikasi-pembayaran.html">💳 Verifikasi Pembayaran</a>
+      <a href="laporan-keuangan.html">💰 Laporan Keuangan</a>
+      <a href="pengaturan.html">⚙️ Pengaturan</a>
+      <a href="#" onclick="logout(); return false;">🚪 Keluar</a>
+    </nav>
+  </aside>
+
+  <main class="main-content">
+    <header class="topbar"><h1>Kelola Mobil</h1></header>
+    <p style="color:#6b7280; margin-bottom:20px;">Semua unit dari seluruh mitra. Mobil nonaktif tidak tampil di katalog.</p>
+
+    <section class="table-section">
+      <table>
+        <thead>
+          <tr><th>Mobil</th><th>Plat</th><th>Mitra</th><th>Spesifikasi</th><th>Harga / hari</th><th>Deposit</th><th>Status</th><th>Ubah Status</th></tr>
+        </thead>
+        <tbody id="tabelMobil"><tr><td colspan="8">Memuat data...</td></tr></tbody>
+      </table>
+    </section>
+  </main>
+</div>
+
+<script src="../assets/js/admin.js"></script>
+<script>
+async function muatMobil() {
+  const tbody = document.getElementById('tabelMobil');
+  try {
+    const data = await apiGet('mobil');
+    tbody.innerHTML = data.data.length ? data.data.map(m => `<tr>
+      <td><b>${esc(m.nama_mobil)}</b><br><small>${esc(m.merk || '')} ${esc(m.tahun || '')}</small></td>
+      <td>${esc(m.plat_nomor)}</td>
+      <td>${esc(m.nama_usaha)}</td>
+      <td>${esc(m.transmisi || '-')} • ${esc(m.jumlah_kursi || '-')} kursi • ${esc(m.bahan_bakar || '-')}</td>
+      <td>LK: Rp ${fmtRp(m.harga_lepas_kunci)}<br><small>Supir: Rp ${fmtRp(m.harga_dengan_supir)}</small></td>
+      <td>Rp ${fmtRp(m.deposit)}</td>
+      <td>${badgeMobil(m.status)}</td>
+      <td>
+        <select onchange="if(this.value) aksiKonfirmasi('Ubah status mobil ini menjadi ' + this.value + '?', 'mobil_status', {id: ${m.id}, status: this.value})">
+          <option value="">— pilih —</option>
+          <option value="tersedia">Tersedia</option>
+          <option value="disewa">Disewa</option>
+          <option value="nonaktif">Nonaktif</option>
+        </select>
+      </td>
+    </tr>`).join('') : '<tr><td colspan="8">Belum ada mobil terdaftar.</td></tr>';
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="8">❌ ${esc(err.message)}</td></tr>`;
+  }
+}
+muatMobil();
+</script>
+</body>
+</html>

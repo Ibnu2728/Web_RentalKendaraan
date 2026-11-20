@@ -61,7 +61,24 @@ if ($action === 'callback') {
     $b->bind_param('i', $bookingId);
 
     if ($a->execute() && $b->execute() && $a->affected_rows === 1 && $b->affected_rows === 1) {
+        // Buat baris struk untuk pembayaran ini (satu pembayaran = satu struk).
+        // detail_json adalah snapshot rincian saat lunas, untuk arsip cetak.
+        $nomorStruk = 'STR-' . date('Ymd') . '-' . strtoupper(bin2hex(random_bytes(3)));
+        $noInvoice  = 'INV-' . date('Ymd') . '-' . strtoupper(bin2hex(random_bytes(3)));
+        $detail = json_encode([
+            'kode_transaksi' => $bayar['kode_transaksi'],
+            'booking_id'     => $bookingId,
+            'total'          => (float)$booking['total_bayar'],
+            'paid_at'        => date('Y-m-d H:i:s'),
+        ]);
+        $s = $conn->prepare("INSERT INTO struk (pembayaran_id, nomor_struk, no_invoice, detail_json) VALUES (?, ?, ?, ?)");
+        $s->bind_param('isss', $bayar['id'], $nomorStruk, $noInvoice, $detail);
+        if (!$s->execute()) {
+            $conn->rollback();
+            json_out(['success' => false, 'message' => 'Gagal membuat struk.']);
+        }
         $conn->commit();
+        catat_log($u['user_id'], 'pembayaran_lunas', $bayar['kode_transaksi']);
         json_out(['success' => true]);
     }
     $conn->rollback();

@@ -5,11 +5,14 @@ $u = requireLogin();
 
 $bookingId = (int)($_GET['booking_id'] ?? 0);
 
-$stmt = $conn->prepare("SELECT b.*, m.nama_mobil, m.mitra_id, u.nama AS penyewa, p.kode_transaksi, p.paid_at
+$stmt = $conn->prepare("SELECT b.*, ps.kode AS jenis_sewa, m.nama_mobil, m.mitra_id, u.nama AS penyewa,
+               p.kode_transaksi, p.paid_at, s.nomor_struk, s.no_invoice
         FROM booking b
         JOIN mobil m ON b.mobil_id = m.id
         JOIN users u ON b.user_id = u.id
+        JOIN paket_sewa ps ON ps.id = b.paket_id
         JOIN pembayaran p ON p.booking_id = b.id AND p.status = 'settlement'
+        LEFT JOIN struk s ON s.pembayaran_id = p.id
         WHERE b.id = ?
         ORDER BY p.id DESC LIMIT 1");
 $stmt->bind_param('i', $bookingId);

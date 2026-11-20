@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard — SewaMobil</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/user.css">
+</head>
+<body>
+<script src="../assets/js/auth.js"></script>
+<script>checkAuth('user');</script>
+
+<header class="navbar">
+  <div class="logo">🚗 SewaMobil</div>
+  <nav>
+    <a href="katalog.html">Katalog</a>
+    <a href="dashboard.html" style="color:#2563eb; font-weight:700;">Dashboard</a>
+    <a href="riwayat.html">Riwayat</a>
+    <a href="#" onclick="logout(); return false;" class="btn-outline">Keluar</a>
+  </nav>
+</header>
+
+<main class="user-main">
+  <h2 id="sapaan">Dashboard</h2>
+  <p class="sub">Ringkasan sewa Anda.</p>
+
+  <div class="u-stats">
+    <div class="u-stat"><span class="icon">📋</span><div><p>Total Booking</p><h3 id="statTotal">–</h3></div></div>
+    <div class="u-stat"><span class="icon">🚗</span><div><p>Sedang Berjalan</p><h3 id="statBerjalan">–</h3></div></div>
+    <div class="u-stat"><span class="icon">✅</span><div><p>Selesai</p><h3 id="statSelesai">–</h3></div></div>
+    <div class="u-stat"><span class="icon">⏳</span><div><p>Menunggu Bayar</p><h3 id="statPending">–</h3></div></div>
+  </div>
+
+  <section class="u-table-box">
+    <h3>Booking Terbaru</h3>
+    <table class="u-table">
+      <thead>
+        <tr><th>Kode</th><th>Mobil</th><th>Layanan</th><th>Tanggal</th><th>Total</th><th>Status</th><th>Aksi</th></tr>
+      </thead>
+      <tbody id="bookingTerbaru"><tr><td colspan="7" class="kosong">Memuat data...</td></tr></tbody>
+    </table>
+    <p style="margin-top:14px;"><a href="riwayat.html">Lihat semua riwayat →</a></p>
+  </section>
+</main>
+
+<script src="../assets/js/user.js"></script>
+<script>
+checkAuth('user').then(s => {
+  if (s && s.nama) document.getElementById('sapaan').textContent = 'Halo, ' + s.nama;
+});
+muatDashboardUser().catch(err => {
+  document.getElementById('bookingTerbaru').innerHTML =
+    `<tr><td colspan="7" class="kosong">❌ ${err.message}</td></tr>`;
+});
+</script>
+</body>
+</html>

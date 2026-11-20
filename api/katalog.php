@@ -5,6 +5,14 @@
 //   GET katalog.php?id=5                -> detail 1 mobil
 require 'config.php';
 
+// Daftar paket sewa (data referensi untuk halaman checkout / ketentuan).
+if (isset($_GET['paket'])) {
+    $result = $conn->query("SELECT id, kode, nama_paket, deskripsi, butuh_ktp, butuh_sipa, deposit_default, tarif_supir, durasi_supir_jam FROM paket_sewa ORDER BY id");
+    $list = [];
+    while ($row = $result->fetch_assoc()) $list[] = $row;
+    json_out(['success' => true, 'data' => $list]);
+}
+
 $base = "SELECT m.id, m.nama_mobil, m.merk, m.plat_nomor, m.tahun, m.transmisi, m.kapasitas,
                 m.harga_lepas_kunci, m.harga_dengan_supir, m.deposit,
                 m.foto_utama, m.foto_360, m.deskripsi, m.status,

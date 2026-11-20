@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Mitra — Profil</title>
+  <link rel="stylesheet" href="../assets/css/admin.css">
+  <link rel="stylesheet" href="../assets/css/mitra.css">
+</head>
+<body>
+<script src="../assets/js/auth.js"></script>
+<script>checkAuth('mitra');</script>
+<div class="admin-layout">
+  <aside class="sidebar">
+    <div class="logo">🏢 Mitra Panel</div>
+    <nav>
+      <a href="dashboard.html">📊 Dashboard</a>
+      <a href="mobil-saya.html">🚗 Mobil Saya</a>
+      <a href="tambah-mobil.html">➕ Tambah Mobil</a>
+      <a href="booking-masuk.html">📋 Booking Masuk</a>
+      <a href="pendapatan.html">💰 Pendapatan</a>
+      <a href="profil.html" class="active">👤 Profil</a>
+      <a href="#" onclick="logout(); return false;">🚪 Keluar</a>
+    </nav>
+  </aside>
+
+  <main class="main-content">
+    <header class="topbar"><h1>Profil Usaha</h1></header>
+
+    <div id="alertBox" class="alert"></div>
+
+    <form class="form-box" id="formProfil">
+      <h2>Data Usaha & Rekening</h2>
+      <div class="form-group">
+        <label>Nama Pemilik (akun)</label>
+        <input type="text" id="fNama" readonly>
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="fEmail" readonly>
+      </div>
+      <div class="form-group">
+        <label>Status Verifikasi</label>
+        <input type="text" id="fStatus" readonly>
+      </div>
+      <div class="form-group">
+        <label>Nama Usaha</label>
+        <input type="text" name="nama_usaha" id="fUsaha" required>
+      </div>
+      <div class="form-group">
+        <label>No. SIPA</label>
+        <input type="text" id="fSipa" readonly>
+      </div>
+      <div class="form-group">
+        <label>No. HP (WhatsApp)</label>
+        <input type="text" name="no_hp" id="fHp">
+      </div>
+      <div class="form-group">
+        <label>Alamat</label>
+        <textarea name="alamat" id="fAlamat" rows="2"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Bank</label>
+        <input type="text" name="rekening_bank" id="fBank" placeholder="cth. BCA">
+      </div>
+      <div class="form-group">
+        <label>No. Rekening</label>
+        <input type="text" name="no_rekening" id="fNoRek">
+      </div>
+      <div class="form-group">
+        <label>Nama Pemilik Rekening</label>
+        <input type="text" name="nama_rekening" id="fNamaRek">
+      </div>
+      <button type="submit" class="btn-primary" id="btnSimpan">💾 Simpan Perubahan</button>
+    </form>
+  </main>
+</div>
+
+<script>
+function tampilAlert(sukses, pesan) {
+  const box = document.getElementById('alertBox');
+  box.className = 'alert show ' + (sukses ? 'alert-success' : 'alert-error');
+  box.textContent = pesan;
+  box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+async function muatProfil() {
+  const res = await fetch('../api/mitra.php?action=profil');
+  const data = await res.json();
+  if (!data.success) { tampilAlert(false, '❌ ' + data.message); return; }
+  const p = data.data;
+  document.getElementById('fNama').value = p.nama || '';
+  document.getElementById('fEmail').value = p.email || '';
+  document.getElementById('fStatus').value = p.status_verifikasi || '';
+  document.getElementById('fUsaha').value = p.nama_usaha || '';
+  document.getElementById('fSipa').value = p.no_sipa || '';
+  document.getElementById('fHp').value = p.no_hp || '';
+  document.getElementById('fAlamat').value = p.alamat || '';
+  document.getElementById('fBank').value = p.rekening_bank || '';
+  document.getElementById('fNoRek').value = p.no_rekening || '';
+  document.getElementById('fNamaRek').value = p.nama_rekening || '';
+}
+
+document.getElementById('formProfil').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('btnSimpan');
+  btn.disabled = true;
+  const res = await fetch('../api/mitra.php?action=profil', { method: 'POST', body: new FormData(e.target) });
+  const data = await res.json();
+  tampilAlert(data.success, (data.success ? '✅ ' : '❌ ') + (data.message || ''));
+  btn.disabled = false;
+});
+
+muatProfil();
+</script>
+</body>
+</html>

@@ -35,6 +35,9 @@ if ($user['role'] === 'mitra') {
     if (!$m) {
         json_out(['success' => false, 'message' => 'Akun mitra belum memiliki profil penyedia. Hubungi admin.'], 403);
     }
+    if ($m['status_verifikasi'] !== 'approved') {
+        json_out(['success' => false, 'message' => 'Akun mitra Anda ' . ($m['status_verifikasi'] === 'rejected' ? 'ditolak' : 'masih menunggu verifikasi admin') . '.'], 403);
+    }
 }
 
 session_regenerate_id(true);
@@ -47,4 +50,5 @@ if ($user['role'] === 'mitra') {
     $_SESSION['mitra_id'] = (int)$m['id'];
 }
 
+catat_log((int)$user['id'], 'login', $user['role']);
 json_out(['success' => true, 'role' => $user['role'], 'nama' => $user['nama']]);

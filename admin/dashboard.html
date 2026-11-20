@@ -31,26 +31,26 @@
   <main class="main-content">
     <header class="topbar">
       <h1>Dashboard</h1>
-      <div class="user-info">👤 Admin Utama</div>
+      <div class="user-info" id="namaAdmin">👤 Admin</div>
     </header>
 
     <!-- STAT CARDS -->
     <div class="stats-grid">
       <div class="stat-card">
         <span class="stat-icon">📋</span>
-        <div><p>Total Booking</p><h3>128</h3></div>
+        <div><p>Total Booking</p><h3 id="statBooking">–</h3></div>
       </div>
       <div class="stat-card">
         <span class="stat-icon">🚗</span>
-        <div><p>Mobil Terdaftar</p><h3>42</h3></div>
+        <div><p>Mobil Terdaftar</p><h3 id="statMobil">–</h3></div>
       </div>
       <div class="stat-card">
         <span class="stat-icon">🏢</span>
-        <div><p>Mitra Aktif</p><h3>18</h3></div>
+        <div><p>Mitra Aktif</p><h3 id="statMitra">–</h3></div>
       </div>
       <div class="stat-card">
         <span class="stat-icon">💰</span>
-        <div><p>Pendapatan Bulan Ini</p><h3>Rp 24.500.000</h3></div>
+        <div><p>Pendapatan Bulan Ini</p><h3 id="statPendapatan">–</h3></div>
       </div>
     </div>
 
@@ -64,17 +64,8 @@
             <th>Jenis Sewa</th><th>Total</th><th>Status</th>
           </tr>
         </thead>
-        <tbody>
-          <tr>
-            <td>BK-2025-001</td><td>Andi</td><td>Avanza</td>
-            <td>Lepas Kunci</td><td>Rp 1.700.000</td>
-            <td><span class="badge badge-warning">Pending</span></td>
-          </tr>
-          <tr>
-            <td>BK-2025-002</td><td>Budi</td><td>Innova</td>
-            <td>Dengan Supir</td><td>Rp 2.400.000</td>
-            <td><span class="badge badge-success">Selesai</span></td>
-          </tr>
+        <tbody id="bookingTerbaru">
+          <tr><td colspan="6">Memuat data...</td></tr>
         </tbody>
       </table>
     </section>
@@ -94,6 +85,30 @@
   </main>
 </div>
 
+<script src="../assets/js/admin.js"></script>
+<script>
+checkAuth('admin').then(s => {
+  if (s && s.nama) document.getElementById('namaAdmin').textContent = '👤 ' + s.nama;
+});
+(async () => {
+  const tbody = document.getElementById('bookingTerbaru');
+  try {
+    const data = await apiGet('dashboard');
+    document.getElementById('statBooking').textContent = data.stats.total_booking;
+    document.getElementById('statMobil').textContent = data.stats.total_mobil;
+    document.getElementById('statMitra').textContent = data.stats.mitra_aktif +
+      (data.stats.mitra_pending ? ` (${data.stats.mitra_pending} menunggu)` : '');
+    document.getElementById('statPendapatan').textContent = 'Rp ' + fmtRp(data.stats.pendapatan_bulan_ini);
+    tbody.innerHTML = data.booking_terbaru.length ? data.booking_terbaru.map(b => `<tr>
+      <td>${esc(b.kode_booking)}</td><td>${esc(b.penyewa)}</td><td>${esc(b.nama_mobil)}</td>
+      <td>${esc(String(b.jenis_sewa).replace(/_/g, ' '))}</td>
+      <td>Rp ${fmtRp(b.total_bayar)}</td><td>${badgeStatus(b.status)}</td>
+    </tr>`).join('') : '<tr><td colspan="6">Belum ada booking.</td></tr>';
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="6">❌ ${esc(err.message)}</td></tr>`;
+  }
+})();
+</script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="../assets/js/laporan.js"></script>
 </body>

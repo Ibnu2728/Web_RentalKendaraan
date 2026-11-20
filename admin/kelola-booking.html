@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin — Kelola Booking</title>
+  <link rel="stylesheet" href="../assets/css/admin.css">
+  <link rel="stylesheet" href="../assets/css/mitra.css">
+</head>
+<body>
+<script src="../assets/js/auth.js"></script>
+<script>checkAuth('admin');</script>
+<div class="admin-layout">
+  <aside class="sidebar">
+    <div class="logo">⚙️ Admin Panel</div>
+    <nav>
+      <a href="dashboard.html">📊 Dashboard</a>
+      <a href="kelola-user.html">👥 Kelola User</a>
+      <a href="kelola-mitra.html">🏢 Kelola Mitra</a>
+      <a href="verifikasi-mitra.html">✅ Verifikasi Mitra</a>
+      <a href="kelola-mobil.html">🚗 Kelola Mobil</a>
+      <a href="kelola-booking.html" class="active">📋 Kelola Booking</a>
+      <a href="verifikasi-pembayaran.html">💳 Verifikasi Pembayaran</a>
+      <a href="laporan-keuangan.html">💰 Laporan Keuangan</a>
+      <a href="pengaturan.html">⚙️ Pengaturan</a>
+      <a href="#" onclick="logout(); return false;">🚪 Keluar</a>
+    </nav>
+  </aside>
+
+  <main class="main-content">
+    <header class="topbar"><h1>Kelola Booking</h1></header>
+    <p style="color:#6b7280; margin-bottom:20px;">Semua booking dari seluruh penyewa dan mitra. Membatalkan booking ikut membatalkan tagihan yang belum dibayar.</p>
+
+    <section class="table-section">
+      <table>
+        <thead>
+          <tr><th>Kode</th><th>Penyewa</th><th>Mobil / Mitra</th><th>Layanan</th><th>Tanggal</th><th>Total</th><th>Status</th><th>Aksi</th></tr>
+        </thead>
+        <tbody id="tabelBooking"><tr><td colspan="8">Memuat data...</td></tr></tbody>
+      </table>
+    </section>
+  </main>
+</div>
+
+<script src="../assets/js/admin.js"></script>
+<script>
+function tombolAdmin(b) {
+  const btn = [];
+  if (b.status === 'pending') {
+    btn.push(`<button class="btn-sm btn-ok" onclick="aksiKonfirmasi('Konfirmasi booking ${esc(b.kode_booking)}?', 'booking_status', {booking_id: ${b.id}, status: 'dikonfirmasi'})">Konfirmasi</button>`);
+  }
+  if (b.status === 'dikonfirmasi') {
+    btn.push(`<button class="btn-sm btn-info" onclick="aksiKonfirmasi('Tandai booking ${esc(b.kode_booking)} sebagai aktif (serah terima)?', 'booking_status', {booking_id: ${b.id}, status: 'aktif'})">Aktif</button>`);
+  }
+  if (['dikonfirmasi', 'aktif'].includes(b.status)) {
+    btn.push(`<button class="btn-sm btn-info" onclick="aksiKonfirmasi('Selesaikan booking ${esc(b.kode_booking)}?', 'booking_status', {booking_id: ${b.id}, status: 'selesai'})">Selesai</button>`);
+  }
+  if (['pending', 'dikonfirmasi', 'aktif'].includes(b.status)) {
+    btn.push(`<button class="btn-sm btn-no" onclick="aksiKonfirmasi('Batalkan booking ${esc(b.kode_booking)}?', 'booking_status', {booking_id: ${b.id}, status: 'batal'})">Batalkan</button>`);
+  }
+  return btn.length ? `<div class="aksi-cell">${btn.join('')}</div>` : '<small>—</small>';
+}
+
+async function muatBooking() {
+  const tbody = document.getElementById('tabelBooking');
+  try {
+    const data = await apiGet('booking');
+    tbody.innerHTML = data.data.length ? data.data.map(b => `<tr>
+      <td>${esc(b.kode_booking)}</td>
+      <td>${esc(b.penyewa)}</td>
+      <td>${esc(b.nama_mobil)}<br><small>${esc(b.nama_usaha)}</small></td>
+      <td>${esc(String(b.jenis_sewa).replace(/_/g, ' '))}</td>
+      <td>${esc(b.tgl_mulai)} s/d ${esc(b.tgl_selesai)}</td>
+      <td>Rp ${fmtRp(b.total_bayar)}</td>
+      <td>${badgeStatus(b.status)}</td>
+      <td>${tombolAdmin(b)}</td>
+    </tr>`).join('') : '<tr><td colspan="8">Belum ada booking.</td></tr>';
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="8">❌ ${esc(err.message)}</td></tr>`;
+  }
+}
+muatBooking();
+</script>
+</body>
+</html>

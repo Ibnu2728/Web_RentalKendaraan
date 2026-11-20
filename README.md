@@ -29,11 +29,22 @@ Admin: laporan pendapatan per rentang tanggal (grafik Chart.js, butuh internet u
 - Mobil tidak bisa dipesan di tanggal yang bentrok. Booking `pending` menahan mobil selama 1 jam.
 - Tanggal mulai tidak boleh di masa lalu.
 
-## Belum dikerjakan
-`register.html`, `user/dashboard.html`, `user/riwayat.html`, `mitra/{booking-masuk,pendapatan,profil}.html`,
-`admin/*` selain dashboard, serta `api/{auth,user,mitra}.php` (masih kosong, sengaja dibiarkan).
-`mitra/dashboard.html` dan tabel/kartu statistik di `admin/dashboard.html` masih data contoh (statis).
-`pembayaran.php` adalah SIMULASI — untuk gateway sungguhan, `callback` harus diverifikasi signature dari gateway.
+## Cabang `uji-coba` — fitur yang dilengkapi
+Di cabang ini semua berkas yang sebelumnya kosong sudah diisi:
+- **Registrasi** (`register.html` + `api/auth.php`): daftar sebagai penyewa (langsung aktif) atau mitra (profil `mitra` dibuat dalam satu transaksi, status `pending`; login mitra ditolak sampai admin menyetujui).
+- **Penyewa** (`api/user.php`): dashboard ringkasan, riwayat booking, pembatalan booking (tagihan pending ikut dibatalkan).
+- **Mitra** (`api/mitra.php`): booking masuk (serah terima → aktif, pengembalian → selesai, tolak → batal), pendapatan per hari, profil usaha & rekening. Dashboard mitra & admin kini menampilkan **data nyata**, bukan contoh statis.
+- **Admin** (`api/admin.php` + 8 halaman kelola): kelola user (aktif/nonaktif), kelola & verifikasi mitra, kelola mobil, kelola booking, verifikasi pembayaran manual (melunasi tagihan menerbitkan struk), laporan keuangan (pemasukan − pengeluaran), pengaturan profil & ganti password admin.
+
+### Database: tanpa tabel yatim + 3NF
+- `paket_sewa` kini benar-benar dipakai: diberi kolom `kode`, dan `booking` menunjuknya lewat FK `paket_id`. Kolom teks `booking.jenis_sewa` **dihapus** (jenis layanan cukup disimpan sekali di tabel referensi — 3NF). API tetap mengembalikan alias `jenis_sewa` berisi kode paket, jadi tampilan lama tidak berubah.
+- `struk` kini diisi: satu baris struk (nomor struk + invoice + snapshot JSON) dibuat dalam transaksi yang sama saat pembayaran lunas, baik lewat callback VA maupun verifikasi admin.
+- `log_aktivitas` kini ditulis pada login, register, pembuatan/pembatalan booking, pembayaran lunas, dan aksi-aksi admin/mitra.
+- Tabel baru `pengeluaran` untuk laporan keuangan admin; setiap baris terikat FK `dicatat_oleh → users(id)`, tidak ada catatan yatim.
+- Kolom harga di `booking` (`harga_per_hari`, `deposit`, `total_bayar`) adalah **snapshot saat transaksi** — fakta milik booking itu sendiri, memang dipertahankan.
+- Instalasi baru: impor `database/rental_mobil.sql` (sudah final). Database lama: jalankan sekali `database/migrasi_uji_coba.sql`.
+
+`pembayaran.php` tetap SIMULASI — untuk gateway sungguhan, `callback` harus diverifikasi signature dari gateway.
 
 ## Troubleshooting login
 

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Riwayat Booking — SewaMobil</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/user.css">
+</head>
+<body>
+<script src="../assets/js/auth.js"></script>
+<script>checkAuth('user');</script>
+
+<header class="navbar">
+  <div class="logo">🚗 SewaMobil</div>
+  <nav>
+    <a href="katalog.html">Katalog</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="riwayat.html" style="color:#2563eb; font-weight:700;">Riwayat</a>
+    <a href="#" onclick="logout(); return false;" class="btn-outline">Keluar</a>
+  </nav>
+</header>
+
+<main class="user-main">
+  <h2>Riwayat Booking</h2>
+  <p class="sub">Semua sewa yang pernah Anda buat. Booking berstatus pending yang belum dibayar bisa dibatalkan di sini.</p>
+
+  <section class="u-table-box">
+    <table class="u-table">
+      <thead>
+        <tr><th>Kode</th><th>Mobil</th><th>Layanan</th><th>Tanggal</th><th>Total</th><th>Status</th><th>Aksi</th></tr>
+      </thead>
+      <tbody id="tabelRiwayat"><tr><td colspan="7" class="kosong">Memuat data...</td></tr></tbody>
+    </table>
+  </section>
+</main>
+
+<script src="../assets/js/user.js"></script>
+<script>
+muatRiwayatUser().catch(err => {
+  document.getElementById('tabelRiwayat').innerHTML =
+    `<tr><td colspan="7" class="kosong">❌ ${err.message}</td></tr>`;
+});
+</script>
+</body>
+</html>

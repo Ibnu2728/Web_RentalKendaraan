@@ -47,6 +47,19 @@ function checkAuth(roles) {
     .catch(() => { window.location.href = '../login.html'; return null; });
 }
 
+/** Lencana status booking (kelas .badge-* tersedia di admin.css & user.css). */
+function badgeStatus(status) {
+  const map = {
+    pending:      ['badge-warning', 'Pending'],
+    dikonfirmasi: ['badge-success', 'Dikonfirmasi'],
+    aktif:        ['badge-success', 'Aktif'],
+    selesai:      ['badge-success', 'Selesai'],
+    batal:        ['badge-danger',  'Batal'],
+  };
+  const [kelas, label] = map[status] || ['badge-warning', String(status || '-')];
+  return `<span class="badge ${kelas}">${esc(label)}</span>`;
+}
+
 /** Hancurkan sesi di server lalu ke halaman login. */
 async function logout() {
   try { await fetch('../api/logout.php', { method: 'POST' }); } catch (e) {}

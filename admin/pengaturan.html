@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin — Pengaturan</title>
+  <link rel="stylesheet" href="../assets/css/admin.css">
+  <link rel="stylesheet" href="../assets/css/mitra.css">
+</head>
+<body>
+<script src="../assets/js/auth.js"></script>
+<script>checkAuth('admin');</script>
+<div class="admin-layout">
+  <aside class="sidebar">
+    <div class="logo">⚙️ Admin Panel</div>
+    <nav>
+      <a href="dashboard.html">📊 Dashboard</a>
+      <a href="kelola-user.html">👥 Kelola User</a>
+      <a href="kelola-mitra.html">🏢 Kelola Mitra</a>
+      <a href="verifikasi-mitra.html">✅ Verifikasi Mitra</a>
+      <a href="kelola-mobil.html">🚗 Kelola Mobil</a>
+      <a href="kelola-booking.html">📋 Kelola Booking</a>
+      <a href="verifikasi-pembayaran.html">💳 Verifikasi Pembayaran</a>
+      <a href="laporan-keuangan.html">💰 Laporan Keuangan</a>
+      <a href="pengaturan.html" class="active">⚙️ Pengaturan</a>
+      <a href="#" onclick="logout(); return false;">🚪 Keluar</a>
+    </nav>
+  </aside>
+
+  <main class="main-content">
+    <header class="topbar"><h1>Pengaturan</h1></header>
+
+    <div id="alertBox" class="alert" style="max-width:640px;"></div>
+
+    <form class="form-box" id="formProfil" style="margin-bottom:24px;">
+      <h2>Profil Admin</h2>
+      <div class="form-group">
+        <label>Email (tidak bisa diubah)</label>
+        <input type="email" id="fEmail" readonly>
+      </div>
+      <div class="form-group">
+        <label>Nama</label>
+        <input type="text" name="nama" id="fNama" required>
+      </div>
+      <div class="form-group">
+        <label>No. HP</label>
+        <input type="text" name="no_hp" id="fHp">
+      </div>
+      <button type="submit" class="btn-primary">💾 Simpan Profil</button>
+    </form>
+
+    <form class="form-box" id="formPassword">
+      <h2>Ganti Password</h2>
+      <div class="form-group">
+        <label>Password Lama</label>
+        <input type="password" name="password_lama" required>
+      </div>
+      <div class="form-group">
+        <label>Password Baru (minimal 6 karakter)</label>
+        <input type="password" name="password_baru" required minlength="6">
+      </div>
+      <button type="submit" class="btn-primary">🔒 Ganti Password</button>
+    </form>
+  </main>
+</div>
+
+<script src="../assets/js/admin.js"></script>
+<script>
+function tampilAlert(sukses, pesan) {
+  const box = document.getElementById('alertBox');
+  box.className = 'alert show ' + (sukses ? 'alert-success' : 'alert-error');
+  box.textContent = pesan;
+  box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+(async () => {
+  try {
+    const data = await apiGet('profil');
+    document.getElementById('fEmail').value = data.data.email || '';
+    document.getElementById('fNama').value = data.data.nama || '';
+    document.getElementById('fHp').value = data.data.no_hp || '';
+  } catch (err) {
+    tampilAlert(false, '❌ ' + err.message);
+  }
+})();
+
+document.getElementById('formProfil').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  try {
+    const data = await apiPost('profil', Object.fromEntries(new FormData(e.target).entries()));
+    tampilAlert(true, '✅ ' + (data.message || 'Profil diperbarui.'));
+  } catch (err) {
+    tampilAlert(false, '❌ ' + err.message);
+  }
+});
+
+document.getElementById('formPassword').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  try {
+    const data = await apiPost('ganti_password', Object.fromEntries(new FormData(e.target).entries()));
+    tampilAlert(true, '✅ ' + (data.message || 'Password diganti.'));
+    e.target.reset();
+  } catch (err) {
+    tampilAlert(false, '❌ ' + err.message);
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin — Kelola Mitra</title>
+  <link rel="stylesheet" href="../assets/css/admin.css">
+  <link rel="stylesheet" href="../assets/css/mitra.css">
+</head>
+<body>
+<script src="../assets/js/auth.js"></script>
+<script>checkAuth('admin');</script>
+<div class="admin-layout">
+  <aside class="sidebar">
+    <div class="logo">⚙️ Admin Panel</div>
+    <nav>
+      <a href="dashboard.html">📊 Dashboard</a>
+      <a href="kelola-user.html">👥 Kelola User</a>
+      <a href="kelola-mitra.html" class="active">🏢 Kelola Mitra</a>
+      <a href="verifikasi-mitra.html">✅ Verifikasi Mitra</a>
+      <a href="kelola-mobil.html">🚗 Kelola Mobil</a>
+      <a href="kelola-booking.html">📋 Kelola Booking</a>
+      <a href="verifikasi-pembayaran.html">💳 Verifikasi Pembayaran</a>
+      <a href="laporan-keuangan.html">💰 Laporan Keuangan</a>
+      <a href="pengaturan.html">⚙️ Pengaturan</a>
+      <a href="#" onclick="logout(); return false;">🚪 Keluar</a>
+    </nav>
+  </aside>
+
+  <main class="main-content">
+    <header class="topbar"><h1>Kelola Mitra</h1></header>
+    <p style="color:#6b7280; margin-bottom:20px;">Daftar semua mitra penyedia mobil beserta status verifikasi dan rekening pencairannya.</p>
+
+    <section class="table-section">
+      <table>
+        <thead>
+          <tr><th>Usaha</th><th>Pemilik</th><th>Kontak</th><th>No. SIPA</th><th>Rekening</th><th>Mobil</th><th>Verifikasi</th><th>Akun</th></tr>
+        </thead>
+        <tbody id="tabelMitra"><tr><td colspan="8">Memuat data...</td></tr></tbody>
+      </table>
+    </section>
+  </main>
+</div>
+
+<script src="../assets/js/admin.js"></script>
+<script>
+async function muatMitra() {
+  const tbody = document.getElementById('tabelMitra');
+  try {
+    const data = await apiGet('mitra');
+    tbody.innerHTML = data.data.length ? data.data.map(m => `<tr>
+      <td><b>${esc(m.nama_usaha)}</b></td>
+      <td>${esc(m.nama)}</td>
+      <td>${esc(m.email)}<br><small>${esc(m.no_hp || '-')}</small></td>
+      <td>${esc(m.no_sipa || '-')}</td>
+      <td>${m.no_rekening ? `${esc(m.rekening_bank || '')} ${esc(m.no_rekening)}<br><small>a.n. ${esc(m.nama_rekening || '')}</small>` : '-'}</td>
+      <td>${esc(m.jumlah_mobil)}</td>
+      <td>${badgeVerif(m.status_verifikasi)}</td>
+      <td>${badgeAkun(m.status_akun)}</td>
+    </tr>`).join('') : '<tr><td colspan="8">Belum ada mitra terdaftar.</td></tr>';
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="8">❌ ${esc(err.message)}</td></tr>`;
+  }
+}
+muatMitra();
+</script>
+</body>
+</html>

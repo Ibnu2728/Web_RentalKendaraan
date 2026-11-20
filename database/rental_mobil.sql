@@ -57,8 +57,12 @@ CREATE TABLE IF NOT EXISTS mobil (
 );
 
 -- ============ PAKET SEWA ============
+-- Tabel referensi jenis layanan. `kode` adalah identitas stabil paket
+-- ('lepas_kunci' / 'dengan_supir') yang dipakai form & URL; booking menunjuk
+-- ke sini lewat paket_id (FK) — BUKAN menyimpan teks jenis sendiri (3NF).
 CREATE TABLE IF NOT EXISTS paket_sewa (
   id INT AUTO_INCREMENT PRIMARY KEY,
+  kode VARCHAR(20) NOT NULL UNIQUE,
   nama_paket VARCHAR(50),
   deskripsi TEXT,
   butuh_ktp BOOLEAN DEFAULT 1,
@@ -74,7 +78,7 @@ CREATE TABLE IF NOT EXISTS booking (
   kode_booking VARCHAR(20) UNIQUE,
   user_id INT NOT NULL,
   mobil_id INT NOT NULL,
-  jenis_sewa ENUM('lepas_kunci','dengan_supir'),
+  paket_id INT NOT NULL,
   tgl_mulai DATE NOT NULL,
   tgl_selesai DATE NOT NULL,
   total_hari INT,
@@ -87,8 +91,13 @@ CREATE TABLE IF NOT EXISTS booking (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id),
   FOREIGN KEY (mobil_id) REFERENCES mobil(id),
+  FOREIGN KEY (paket_id) REFERENCES paket_sewa(id),
   INDEX idx_booking_jadwal (mobil_id, tgl_mulai, tgl_selesai)
 );
+-- Catatan 3NF: harga_per_hari, biaya_supir, deposit, dan total_bayar di tabel
+-- booking adalah SNAPSHOT harga saat transaksi terjadi (fakta milik booking
+-- itu sendiri), bukan salinan hidup dari tabel mobil — harga mobil boleh
+-- berubah besok, booking lama tidak ikut berubah. Karena itu dipertahankan.
 
 -- ============ PEMBAYARAN ============
 CREATE TABLE IF NOT EXISTS pembayaran (
@@ -114,6 +123,22 @@ CREATE TABLE IF NOT EXISTS struk (
   detail_json JSON,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (pembayaran_id) REFERENCES pembayaran(id) ON DELETE CASCADE
+);
+
+-- ============ PENGELUARAN (operasional, dicatat admin) ============
+-- Setiap baris terikat ke admin pencatatnya lewat FK dicatat_oleh -> users,
+-- jadi tidak ada catatan keuangan yang yatim. Semua kolom non-kunci hanya
+-- bergantung pada id pengeluaran ini sendiri (3NF).
+CREATE TABLE IF NOT EXISTS pengeluaran (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  tanggal DATE NOT NULL,
+  kategori VARCHAR(50) NOT NULL,
+  keterangan VARCHAR(255),
+  jumlah DECIMAL(12,2) NOT NULL,
+  dicatat_oleh INT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (dicatat_oleh) REFERENCES users(id) ON DELETE RESTRICT,
+  INDEX idx_pengeluaran_tanggal (tanggal)
 );
 
 -- ============ LOG AKTIVITAS ============
@@ -142,6 +167,6 @@ INSERT INTO mobil (mitra_id, nama_mobil, merk, plat_nomor, tahun, transmisi, kap
  (1, 'Toyota Innova', 'Toyota',   'B 2345 BCD', 2021, 'matic',  7, 500000, 800000, 500000, 'Nyaman untuk perjalanan jauh.'),
  (1, 'Honda Brio',    'Honda',    'B 3456 CDE', 2023, 'matic',  5, 300000, 550000, 500000, 'Irit dan lincah untuk dalam kota.');
 
-INSERT INTO paket_sewa (nama_paket, deskripsi, butuh_ktp, butuh_sipa, deposit_default, tarif_supir, durasi_supir_jam) VALUES
- ('Lepas Kunci',  'KTP elektronik & SIPA asli, deposit jaminan, serah terima foto 360.', 1, 1, 500000, 0, 12),
- ('Dengan Supir', 'Bebas deposit, supir berpengalaman, durasi kerja 12 jam/hari.',      1, 0, 0,      0, 12);
+INSERT INTO paket_sewa (kode, nama_paket, deskripsi, butuh_ktp, butuh_sipa, deposit_default, tarif_supir, durasi_supir_jam) VALUES
+ ('lepas_kunci',  'Lepas Kunci',  'KTP elektronik & SIPA asli, deposit jaminan, serah terima foto 360.', 1, 1, 500000, 0, 12),
+ ('dengan_supir', 'Dengan Supir', 'Bebas deposit, supir berpengalaman, durasi kerja 12 jam/hari.',      1, 0, 0,      0, 12);

@@ -31,3 +31,19 @@ if ($conn->connect_error) {
     json_out(['success' => false, 'message' => 'Koneksi database gagal.'], 500);
 }
 $conn->set_charset('utf8mb4');
+
+/** Tulis satu baris ke log_aktivitas. Kegagalan mencatat log tidak boleh
+ *  menggagalkan proses utama, jadi error diabaikan dengan sengaja. */
+function catat_log(?int $userId, string $aksi, string $detail = ''): void {
+    global $conn;
+    try {
+        $stmt = $conn->prepare("INSERT INTO log_aktivitas (user_id, aksi, detail, ip_address) VALUES (?, ?, ?, ?)");
+        if ($stmt) {
+            $ip = $_SERVER['REMOTE_ADDR'] ?? '';
+            $stmt->bind_param('isss', $userId, $aksi, $detail, $ip);
+            $stmt->execute();
+        }
+    } catch (Throwable $e) {
+        // abaikan
+    }
+}

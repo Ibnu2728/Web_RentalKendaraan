@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Mitra — Pendapatan</title>
+  <link rel="stylesheet" href="../assets/css/admin.css">
+  <link rel="stylesheet" href="../assets/css/mitra.css">
+</head>
+<body>
+<script src="../assets/js/auth.js"></script>
+<script>checkAuth('mitra');</script>
+<div class="admin-layout">
+  <aside class="sidebar">
+    <div class="logo">🏢 Mitra Panel</div>
+    <nav>
+      <a href="dashboard.html">📊 Dashboard</a>
+      <a href="mobil-saya.html">🚗 Mobil Saya</a>
+      <a href="tambah-mobil.html">➕ Tambah Mobil</a>
+      <a href="booking-masuk.html">📋 Booking Masuk</a>
+      <a href="pendapatan.html" class="active">💰 Pendapatan</a>
+      <a href="profil.html">👤 Profil</a>
+      <a href="#" onclick="logout(); return false;">🚪 Keluar</a>
+    </nav>
+  </aside>
+
+  <main class="main-content">
+    <header class="topbar"><h1>Pendapatan</h1></header>
+
+    <section class="laporan-section">
+      <div class="filter-bar">
+        <label>Dari: <input type="date" id="tglDari"></label>
+        <label>Sampai: <input type="date" id="tglSampai"></label>
+        <button class="btn-primary" onclick="muatPendapatan()">Filter</button>
+      </div>
+      <p id="ringkasan" style="margin:12px 0; font-weight:600;"></p>
+      <canvas id="chartPendapatan" height="80"></canvas>
+    </section>
+
+    <section class="table-section" style="margin-top:24px;">
+      <h2>Rincian per Hari</h2>
+      <table>
+        <thead><tr><th>Tanggal</th><th>Transaksi Lunas</th><th>Total</th></tr></thead>
+        <tbody id="tabelPendapatan"><tr><td colspan="3">Memuat data...</td></tr></tbody>
+      </table>
+    </section>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+let chart = null;
+function isoLokal(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+async function muatPendapatan() {
+  const dari = document.getElementById('tglDari').value;
+  const sampai = document.getElementById('tglSampai').value;
+  if (!dari || !sampai || sampai < dari) { alert('Rentang tanggal tidak valid.'); return; }
+  const tbody = document.getElementById('tabelPendapatan');
+  try {
+    const res = await fetch(`../api/mitra.php?action=pendapatan&dari=${encodeURIComponent(dari)}&sampai=${encodeURIComponent(sampai)}`);
+    const data = await res.json();
+    if (!data.success) throw new Error(data.message);
+    tbody.innerHTML = data.data.length ? data.data.map(r => `<tr>
+      <td>${esc(r.tanggal)}</td><td>${esc(r.transaksi)}</td><td>Rp ${fmtRp(r.total)}</td>
+    </tr>`).join('') : '<tr><td colspan="3">Tidak ada pembayaran lunas pada rentang ini.</td></tr>';
+    document.getElementById('ringkasan').textContent =
+      `Total pendapatan: Rp ${fmtRp(data.total)} (${data.data.length} hari ada transaksi)`;
+
+    const ctx = document.getElementById('chartPendapatan').getContext('2d');
+    if (chart) chart.destroy();
+    chart = new Chart(ctx, {
+      type: 'bar',
+      data: { labels: data.data.map(r => r.tanggal),
+              datasets: [{ label: 'Pendapatan (Rp)', data: data.data.map(r => Number(r.total)), backgroundColor: '#16a34a', borderRadius: 6 }] },
+      options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+    });
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="3">❌ ${esc(err.message)}</td></tr>`;
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const now = new Date();
+  document.getElementById('tglDari').value = isoLokal(new Date(now.getFullYear(), now.getMonth(), 1));
+  document.getElementById('tglSampai').value = isoLokal(now);
+  muatPendapatan();
+});
+</script>
+</body>
+</html>

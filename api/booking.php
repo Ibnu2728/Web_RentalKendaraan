@@ -15,6 +15,17 @@ if (!in_array($jenis, ['lepas_kunci', 'dengan_supir'], true)) {
     json_out(['success' => false, 'message' => 'Jenis sewa tidak valid.']);
 }
 
+// Jenis sewa adalah data referensi: ambil paketnya dari paket_sewa.
+// Booking hanya menyimpan paket_id (FK), bukan teks jenisnya (3NF).
+$pq = $conn->prepare("SELECT id FROM paket_sewa WHERE kode = ?");
+$pq->bind_param('s', $jenis);
+$pq->execute();
+$paket = $pq->get_result()->fetch_assoc();
+if (!$paket) {
+    json_out(['success' => false, 'message' => 'Paket sewa tidak ditemukan.'], 500);
+}
+$paketId = (int)$paket['id'];
+
 // Validasi tanggal (format Y-m-d, tidak di masa lalu, selesai >= mulai)
 $d1 = DateTime::createFromFormat('Y-m-d', $mulai);
 $d2 = DateTime::createFromFormat('Y-m-d', $selesai);
@@ -57,13 +68,14 @@ if ((int)$c->get_result()->fetch_assoc()['n'] > 0) {
 $kode = 'BK-' . date('Ymd') . '-' . strtoupper(bin2hex(random_bytes(3)));
 
 $stmt = $conn->prepare("INSERT INTO booking
-    (kode_booking, user_id, mobil_id, jenis_sewa, tgl_mulai, tgl_selesai, total_hari, harga_per_hari, deposit, total_bayar, status)
+    (kode_booking, user_id, mobil_id, paket_id, tgl_mulai, tgl_selesai, total_hari, harga_per_hari, deposit, total_bayar, status)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')");
-//                    s  i  i  s  s  s  i  d  d  d
-$stmt->bind_param('siisssiddd', $kode, $u['user_id'], $mobilId, $jenis, $mulai, $selesai,
+//                    s  i  i  i  s  s  i  d  d  d
+$stmt->bind_param('siiissiddd', $kode, $u['user_id'], $mobilId, $paketId, $mulai, $selesai,
                   $totalHari, $hargaPerHari, $deposit, $totalBayar);
 
 if ($stmt->execute()) {
+    catat_log($u['user_id'], 'booking_dibuat', $kode);
     json_out(['success' => true, 'booking_id' => $stmt->insert_id, 'kode' => $kode, 'total' => $totalBayar]);
 }
 json_out(['success' => false, 'message' => 'Gagal membuat booking: ' . $stmt->error]);

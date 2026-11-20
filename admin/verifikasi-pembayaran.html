@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin — Verifikasi Pembayaran</title>
+  <link rel="stylesheet" href="../assets/css/admin.css">
+  <link rel="stylesheet" href="../assets/css/mitra.css">
+</head>
+<body>
+<script src="../assets/js/auth.js"></script>
+<script>checkAuth('admin');</script>
+<div class="admin-layout">
+  <aside class="sidebar">
+    <div class="logo">⚙️ Admin Panel</div>
+    <nav>
+      <a href="dashboard.html">📊 Dashboard</a>
+      <a href="kelola-user.html">👥 Kelola User</a>
+      <a href="kelola-mitra.html">🏢 Kelola Mitra</a>
+      <a href="verifikasi-mitra.html">✅ Verifikasi Mitra</a>
+      <a href="kelola-mobil.html">🚗 Kelola Mobil</a>
+      <a href="kelola-booking.html">📋 Kelola Booking</a>
+      <a href="verifikasi-pembayaran.html" class="active">💳 Verifikasi Pembayaran</a>
+      <a href="laporan-keuangan.html">💰 Laporan Keuangan</a>
+      <a href="pengaturan.html">⚙️ Pengaturan</a>
+      <a href="#" onclick="logout(); return false;">🚪 Keluar</a>
+    </nav>
+  </aside>
+
+  <main class="main-content">
+    <header class="topbar"><h1>Verifikasi Pembayaran</h1></header>
+    <p style="color:#6b7280; margin-bottom:20px;">Untuk pembayaran manual/transfer yang perlu dicek admin. Menyetujui tagihan pending akan melunaskannya, mengonfirmasi booking, dan menerbitkan nomor struk. Pembayaran simulasi VA yang sudah lunas otomatis tidak perlu diverifikasi lagi.</p>
+
+    <section class="table-section">
+      <table>
+        <thead>
+          <tr><th>Kode Transaksi</th><th>Booking</th><th>Penyewa</th><th>Metode / VA</th><th>Jumlah</th><th>Status</th><th>No. Struk</th><th>Aksi</th></tr>
+        </thead>
+        <tbody id="tabelBayar"><tr><td colspan="8">Memuat data...</td></tr></tbody>
+      </table>
+    </section>
+  </main>
+</div>
+
+<script src="../assets/js/admin.js"></script>
+<script>
+async function muatBayar() {
+  const tbody = document.getElementById('tabelBayar');
+  try {
+    const data = await apiGet('pembayaran');
+    tbody.innerHTML = data.data.length ? data.data.map(p => `<tr>
+      <td>${esc(p.kode_transaksi)}</td>
+      <td>${esc(p.kode_booking)}</td>
+      <td>${esc(p.penyewa)}</td>
+      <td>${esc(p.metode || '-')}<br><small>${esc(p.va_number || '')}</small></td>
+      <td>Rp ${fmtRp(p.gross_amount)}</td>
+      <td>${badgeBayar(p.status)}</td>
+      <td>${esc(p.nomor_struk || '-')}</td>
+      <td>${p.status === 'pending' ? `<div class="aksi-cell">
+        <button class="btn-sm btn-ok" onclick="aksiKonfirmasi('Nyatakan tagihan ${esc(p.kode_transaksi)} LUNAS?', 'verifikasi_pembayaran', {pembayaran_id: ${p.id}, keputusan: 'settlement'})">✔ Lunasi</button>
+        <button class="btn-sm btn-no" onclick="aksiKonfirmasi('Batalkan tagihan ${esc(p.kode_transaksi)}?', 'verifikasi_pembayaran', {pembayaran_id: ${p.id}, keputusan: 'cancel'})">✖ Batalkan</button>
+      </div>` : '<small>—</small>'}</td>
+    </tr>`).join('') : '<tr><td colspan="8">Belum ada pembayaran.</td></tr>';
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="8">❌ ${esc(err.message)}</td></tr>`;
+  }
+}
+muatBayar();
+</script>
+</body>
+</html>
