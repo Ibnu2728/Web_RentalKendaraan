@@ -100,7 +100,16 @@ function doku_buat_link_bayar(array $payload): array {
     if ($code >= 200 && $code < 300 && $url) {
         return ['url' => $url];
     }
-    $pesan = $json['error']['message'] ?? ($json['message'] ?? ('HTTP ' . $code));
+    // Pesan error DOKU sering berbentuk array — ratakan jadi teks
+    // terbaca (menampilkannya mentah menghasilkan kata "Array").
+    $mentah = $json['error']['message'] ?? ($json['message'] ?? null);
+    $kumpul = [];
+    $telusur = function ($v) use (&$telusur, &$kumpul) {
+        if (is_array($v)) { foreach ($v as $x) $telusur($x); }
+        elseif (is_scalar($v) && $v !== '') { $kumpul[] = (string) $v; }
+    };
+    if ($mentah !== null) $telusur($mentah);
+    $pesan = $kumpul ? implode('; ', array_unique($kumpul)) : ('HTTP ' . $code);
     return ['error' => 'DOKU menolak permintaan: ' . $pesan];
 }
 
