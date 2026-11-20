@@ -11,7 +11,7 @@ sekali** — semua pekerjaan ada di `uji-coba` sampai dinyatakan siap merge.
 
 | Area | Yang ditambahkan |
 | --- | --- |
-| Akun | Dibuatkan admin dari `admin/kelola-user.html` (admin menentukan password). Registrasi mandiri ditutup — `register.html` hanya menampilkan pemberitahuan |
+| Akun | Dua cara: registrasi mandiri di `register.html`, atau dibuatkan admin dari `admin/kelola-user.html` (admin menentukan password; mitra buatan admin langsung approved) |
 | Penyewa | `user/dashboard.html`, `user/riwayat.html` + `api/user.php` — ringkasan, riwayat, batalkan booking |
 | Mitra | `mitra/booking-masuk.html`, `mitra/pendapatan.html`, `mitra/profil.html` + `api/mitra.php` — serah terima → aktif → selesai, pendapatan per hari, profil & rekening |
 | Admin | `api/admin.php` + 8 halaman: kelola user, kelola mitra, verifikasi mitra, kelola mobil, kelola booking, verifikasi pembayaran, laporan keuangan, pengaturan |

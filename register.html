@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pendaftaran Ditutup — SewaMobil</title>
+  <title>Daftar — SewaMobil</title>
   <link rel="stylesheet" href="assets/css/style.css">
   <style>
     body {
@@ -13,23 +13,134 @@
     .login-card {
       background: #fff; padding: 36px; border-radius: 16px;
       box-shadow: 0 8px 24px rgba(0,0,0,.08); width: 100%; max-width: 440px;
-      text-align: center;
     }
-    .login-card h2 { margin-bottom: 8px; color: #2563eb; font-size: 24px; }
-    .login-card p { color: #6b7280; font-size: 14px; line-height: 1.7; margin-bottom: 16px; }
-    .login-card a.btn-primary { display: inline-block; text-decoration: none; }
+    .login-card h2 { text-align: center; margin-bottom: 8px; color: #2563eb; font-size: 24px; }
+    .login-card p.sub { text-align: center; color: #6b7280; font-size: 14px; margin-bottom: 24px; }
+    .form-group { margin-bottom: 16px; }
+    .login-card label { font-size: 14px; font-weight: 600; display: block; margin-bottom: 6px; color: #374151; }
+    .login-card input, .login-card textarea, .login-card select {
+      width: 100%; padding: 12px 14px; border: 1px solid #d1d5db;
+      border-radius: 8px; font-size: 14px; transition: .2s; font-family: inherit;
+    }
+    .login-card input:focus, .login-card textarea:focus, .login-card select:focus {
+      outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,.15);
+    }
+    .login-card button {
+      width: 100%; padding: 12px; background: #2563eb; color: #fff;
+      border: none; border-radius: 8px; font-weight: 700; cursor: pointer;
+      font-size: 15px; margin-top: 8px; transition: .2s;
+    }
+    .login-card button:hover { background: #1e40af; }
+    .login-card button:disabled { background: #9ca3af; cursor: not-allowed; }
+    .alert { padding: 12px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; display: none; text-align: center; font-weight: 500; }
+    .alert.show { display: block; }
+    .alert-error { background: #fee2e2; color: #b91c1c; }
+    .alert-success { background: #dcfce7; color: #15803d; }
+    .ke-login { text-align: center; margin-top: 18px; font-size: 14px; color: #6b7280; }
+    .ke-login a { color: #2563eb; font-weight: 600; text-decoration: none; }
   </style>
 </head>
 <body>
 
-  <div class="login-card">
+  <form class="login-card" id="formDaftar">
     <h2>🚗 SewaMobil</h2>
-    <p><strong>Pendaftaran mandiri ditutup.</strong></p>
-    <p>Akun SewaMobil dibuatkan oleh admin. Silakan hubungi admin untuk
-       dibuatkan akun — admin akan memberikan email dan password untuk Anda
-       login pertama kali.</p>
-    <a href="login.html" class="btn-primary">Ke Halaman Login</a>
-  </div>
+    <p class="sub">Buat akun baru</p>
 
+    <div id="alert" class="alert"></div>
+
+    <div class="form-group">
+      <label>Daftar sebagai</label>
+      <select name="role" id="role">
+        <option value="user">👤 Penyewa (User)</option>
+        <option value="mitra">🏢 Mitra (Pemilik Mobil)</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Nama Lengkap</label>
+      <input type="text" name="nama" required placeholder="Nama Anda">
+    </div>
+
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" name="email" required placeholder="nama@mail.com">
+    </div>
+
+    <div class="form-group">
+      <label>No. HP (WhatsApp)</label>
+      <input type="text" name="no_hp" placeholder="08xxxxxxxxxx">
+    </div>
+
+    <div class="form-group">
+      <label>Alamat</label>
+      <textarea name="alamat" rows="2" placeholder="Alamat lengkap"></textarea>
+    </div>
+
+    <div id="fieldMitra" style="display:none;">
+      <div class="form-group">
+        <label>Nama Usaha</label>
+        <input type="text" name="nama_usaha" id="namaUsaha" placeholder="cth. PT Sewa Jaya">
+      </div>
+      <div class="form-group">
+        <label>No. SIPA</label>
+        <input type="text" name="no_sipa" placeholder="Nomor SIPA (jika ada)">
+      </div>
+      <p style="font-size:13px; color:#6b7280; margin-bottom:16px;">
+        ℹ️ Akun mitra aktif setelah diverifikasi admin. Anda belum bisa login sebelum disetujui.
+      </p>
+    </div>
+
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" name="password" required minlength="6" placeholder="Minimal 6 karakter">
+    </div>
+
+    <div class="form-group">
+      <label>Konfirmasi Password</label>
+      <input type="password" name="konfirmasi" required placeholder="Ulangi password">
+    </div>
+
+    <button type="submit" id="btnDaftar">Daftar</button>
+
+    <p class="ke-login">Sudah punya akun? <a href="login.html">Masuk di sini</a></p>
+  </form>
+
+<script>
+const roleEl = document.getElementById('role');
+const fieldMitra = document.getElementById('fieldMitra');
+const namaUsaha = document.getElementById('namaUsaha');
+
+roleEl.addEventListener('change', () => {
+  const mitra = roleEl.value === 'mitra';
+  fieldMitra.style.display = mitra ? 'block' : 'none';
+  namaUsaha.required = mitra;
+});
+
+document.getElementById('formDaftar').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('btnDaftar');
+  const alertBox = document.getElementById('alert');
+  btn.disabled = true;
+  btn.textContent = 'Memproses...';
+  alertBox.className = 'alert';
+
+  try {
+    const res = await fetch('api/auth.php', { method: 'POST', body: new FormData(e.target) });
+    const data = await res.json();
+    alertBox.textContent = data.message || (data.success ? 'Pendaftaran berhasil.' : 'Pendaftaran gagal.');
+    alertBox.classList.add('show', data.success ? 'alert-success' : 'alert-error');
+    if (data.success) {
+      e.target.reset();
+      fieldMitra.style.display = 'none';
+      setTimeout(() => window.location.href = 'login.html', 1800);
+    }
+  } catch (err) {
+    alertBox.textContent = 'Terjadi kesalahan jaringan.';
+    alertBox.classList.add('show', 'alert-error');
+  }
+  btn.disabled = false;
+  btn.textContent = 'Daftar';
+});
+</script>
 </body>
 </html>

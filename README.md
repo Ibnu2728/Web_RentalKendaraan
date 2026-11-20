@@ -31,7 +31,7 @@ Admin: laporan pendapatan per rentang tanggal (grafik Chart.js, butuh internet u
 
 ## Cabang `uji-coba` — fitur yang dilengkapi
 Di cabang ini semua berkas yang sebelumnya kosong sudah diisi:
-- **Akun dibuatkan admin** (sejak branch `fitur/doku`): registrasi mandiri DITUTUP (`register.html` menampilkan pemberitahuan, `api/auth.php` menolak pendaftaran). Admin membuat akun penyewa/mitra dari `admin/kelola-user.html` (form Tambah Akun di `api/admin.php` action `tambah_akun`) dan menentukan password-nya untuk diserahkan ke pemilik akun; akun mitra buatan admin langsung `approved`.
+- **Dua cara akun dibuat**: (1) registrasi mandiri di `register.html` + `api/auth.php` — penyewa langsung aktif, mitra berstatus `pending` sampai diverifikasi admin; (2) dibuatkan admin dari `admin/kelola-user.html` (form Tambah Akun, `api/admin.php` action `tambah_akun`) — admin menentukan password-nya untuk diserahkan ke pemilik akun, dan akun mitra buatan admin langsung `approved`.
 - **Penyewa** (`api/user.php`): dashboard ringkasan, riwayat booking, pembatalan booking (tagihan pending ikut dibatalkan).
 - **Mitra** (`api/mitra.php`): booking masuk (serah terima → aktif, pengembalian → selesai, tolak → batal), pendapatan per hari, profil usaha & rekening. Dashboard mitra & admin kini menampilkan **data nyata**, bukan contoh statis.
 - **Admin** (`api/admin.php` + 8 halaman kelola): kelola user (aktif/nonaktif), kelola & verifikasi mitra, kelola mobil, kelola booking, verifikasi pembayaran manual (melunasi tagihan menerbitkan struk), laporan keuangan (pemasukan − pengeluaran), pengaturan profil & ganti password admin.
