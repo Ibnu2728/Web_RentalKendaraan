@@ -29,8 +29,42 @@ fetch(`../api/struk.php?booking_id=${encodeURIComponent(bookingId)}`)
   .then(r => r.json())
   .then(({ success, data, message }) => {
     if (!success || !data) {
-      area.innerHTML = `<p style="color:#b91c1c;">❌ ${esc(message || 'Struk tidak ditemukan.')}</p>
+      area.innerHTML = `<p style="color:#b91c1c;">❌ ${esc(message || 'Booking tidak ditemukan.')}</p>
                         <p style="margin-top:16px;"><a href="katalog.html" class="btn-outline">Kembali ke Katalog</a></p>`;
+      return;
+    }
+    if (data.p_status !== 'settlement') {
+      const statusTeks = { pending: 'MENUNGGU VERIFIKASI ADMIN', expire: 'KEDALUWARSA', cancel: 'DIBATALKAN' }[data.p_status] || 'BELUM DIBAYAR';
+      const metodeTeks = { doku: 'DOKU', va: 'Virtual Account', transfer: 'Transfer Bank', qris: 'QRIS', midtrans: 'Midtrans', xendit: 'Xendit' }[data.metode] || '-';
+      area.style.borderTopColor = '#d97706';
+      area.innerHTML = `
+      <div class="struk-header">
+        <h1 style="color:#d97706;">🧾 INVOICE PEMBAYARAN</h1>
+        <p>Status: <b>${esc(statusTeks)}</b></p>
+      </div>
+      <table class="struk-body" width="100%">
+        ${data.kode_transaksi ? `<tr><td>No. Transaksi</td><td align="right"><b>${esc(data.kode_transaksi)}</b></td></tr>` : ''}
+        <tr><td>Kode Booking</td><td align="right">${esc(data.kode_booking)}</td></tr>
+        <tr><td>Nama Penyewa</td><td align="right">${esc(data.penyewa)}</td></tr>
+        <tr><td>Mobil</td><td align="right">${esc(data.nama_mobil)}</td></tr>
+        <tr><td>Layanan</td><td align="right">${esc(String(data.jenis_sewa).replace(/_/g, ' ').toUpperCase())}</td></tr>
+        <tr><td>Durasi</td><td align="right">${esc(data.total_hari)} Hari</td></tr>
+        <tr><td>Tanggal Sewa</td><td align="right">${esc(data.tgl_mulai)} s/d ${esc(data.tgl_selesai)}</td></tr>
+        <tr><td>Harga / hari</td><td align="right">Rp ${fmtRp(data.harga_per_hari)}</td></tr>
+        <tr><td>Deposit</td><td align="right">Rp ${fmtRp(data.deposit)}</td></tr>
+        <tr><td>Metode Pembayaran</td><td align="right">${esc(metodeTeks)}</td></tr>
+        ${data.va_number ? `<tr><td>Nomor VA</td><td align="right"><b>${esc(data.va_number)}</b></td></tr>` : ''}
+        <tr><td colspan="2"><hr></td></tr>
+        <tr><td><b>TOTAL TAGIHAN</b></td><td align="right" style="color:#d97706; font-size:18px;"><b>Rp ${fmtRp(data.gross_amount ?? data.total_bayar)}</b></td></tr>
+      </table>
+      <div class="struk-footer">
+        <p>Ini adalah invoice, bukan struk. Struk resmi terbit di halaman ini setelah pembayaran diverifikasi oleh admin.</p>
+      </div>
+      <div class="no-print" style="margin-top:24px; text-align:center;">
+        <a href="pembayaran.html?booking_id=${encodeURIComponent(bookingId)}" class="btn-primary" style="padding:12px 24px;">Ke Halaman Pembayaran</a>
+        <button onclick="location.reload()" class="btn-outline" style="padding:12px 24px;">Cek Status</button>
+        <a href="katalog.html" class="btn-outline" style="padding:12px 24px;">Kembali ke Katalog</a>
+      </div>`;
       return;
     }
     area.innerHTML = `
